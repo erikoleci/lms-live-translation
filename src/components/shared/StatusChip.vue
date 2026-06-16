@@ -7,32 +7,22 @@
   </v-chip>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { computed } from 'vue'
-import type { SessionStatus } from '../../types'
 
-const props = withDefaults(
-  defineProps<{ status: SessionStatus; variant?: 'flat' | 'tonal' | 'outlined' }>(),
-  { variant: 'tonal' }
-)
+const props = defineProps({
+  status: String,
+  variant: { type: String, default: 'tonal' },
+})
 
 const color = computed(() => ({
-  CREATED: 'grey',
-  WAITING: 'blue',
-  ACTIVE: 'success',
-  PAUSED: 'warning',
-  ENDED: 'default',
-  FAILED: 'error',
-  EXPIRED: 'grey',
+  CREATED: 'grey', WAITING: 'blue', ACTIVE: 'success',
+  PAUSED: 'warning', ENDED: 'default', FAILED: 'error', EXPIRED: 'grey',
 }[props.status] ?? 'grey'))
 
 const icon = computed(() => ({
-  CREATED: 'mdi-clock-outline',
-  WAITING: 'mdi-dots-horizontal-circle',
-  ACTIVE: 'mdi-broadcast',
-  PAUSED: 'mdi-pause-circle',
-  ENDED: 'mdi-check-circle',
-  FAILED: 'mdi-alert-circle',
-  EXPIRED: 'mdi-timer-off',
+  CREATED: 'mdi-clock-outline', WAITING: 'mdi-dots-horizontal-circle',
+  ACTIVE: 'mdi-broadcast', PAUSED: 'mdi-pause-circle',
+  ENDED: 'mdi-check-circle', FAILED: 'mdi-alert-circle', EXPIRED: 'mdi-timer-off',
 }[props.status] ?? 'mdi-help-circle'))
 </script>

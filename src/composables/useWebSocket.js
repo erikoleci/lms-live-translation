@@ -1,39 +1,23 @@
 import { ref, onUnmounted } from 'vue'
 
-export type WsEvent =
-  | 'SESSION_STATUS_CHANGED'
-  | 'PARTICIPANT_JOINED'
-  | 'PARTICIPANT_LEFT'
-  | 'TRANSCRIPT_PARTIAL'
-  | 'TRANSCRIPT_FINAL'
-  | 'TRANSLATION_PARTIAL'
-  | 'TRANSLATION_FINAL'
-  | 'TTS_AUDIO_CHUNK_READY'
-  | 'ERROR'
-  | 'HEARTBEAT'
-
-export type WsStatus = 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING'
-
-type EventHandler = (payload: unknown) => void
-
-export function useWebSocket(url: string) {
-  const status = ref<WsStatus>('DISCONNECTED')
-  const handlers = new Map<WsEvent, Set<EventHandler>>()
-  let ws: WebSocket | null = null
-  let retryTimeout: ReturnType<typeof setTimeout> | null = null
+export function useWebSocket(url) {
+  const status = ref('DISCONNECTED')
+  const handlers = new Map()
+  let ws = null
+  let retryTimeout = null
   let retryCount = 0
   const MAX_RETRIES = 5
 
-  function on(event: WsEvent, handler: EventHandler) {
+  function on(event, handler) {
     if (!handlers.has(event)) handlers.set(event, new Set())
-    handlers.get(event)!.add(handler)
+    handlers.get(event).add(handler)
   }
 
-  function off(event: WsEvent, handler: EventHandler) {
+  function off(event, handler) {
     handlers.get(event)?.delete(handler)
   }
 
-  function emit(event: WsEvent, payload: unknown) {
+  function emit(event, payload) {
     handlers.get(event)?.forEach(h => h(payload))
   }
 
@@ -42,23 +26,15 @@ export function useWebSocket(url: string) {
     status.value = retryCount > 0 ? 'RECONNECTING' : 'CONNECTING'
     try {
       ws = new WebSocket(url)
-      ws.onopen = () => {
-        status.value = 'CONNECTED'
-        retryCount = 0
-      }
+      ws.onopen = () => { status.value = 'CONNECTED'; retryCount = 0 }
       ws.onmessage = (e) => {
         try {
           const msg = JSON.parse(e.data)
           emit(msg.event, msg.payload)
         } catch { /* ignore malformed */ }
       }
-      ws.onclose = () => {
-        status.value = 'DISCONNECTED'
-        scheduleRetry()
-      }
-      ws.onerror = () => {
-        status.value = 'DISCONNECTED'
-      }
+      ws.onclose = () => { status.value = 'DISCONNECTED'; scheduleRetry() }
+      ws.onerror = () => { status.value = 'DISCONNECTED' }
     } catch {
       status.value = 'DISCONNECTED'
       scheduleRetry()
@@ -72,7 +48,7 @@ export function useWebSocket(url: string) {
     retryTimeout = setTimeout(connect, delay)
   }
 
-  function send(event: string, payload: unknown) {
+  function send(event, payload) {
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ event, payload }))
     }

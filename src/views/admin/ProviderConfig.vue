@@ -10,7 +10,6 @@
       <v-btn color="primary" variant="flat" prepend-icon="mdi-plus">Add Provider</v-btn>
     </div>
 
-    <!-- Filter tabs -->
     <v-tabs v-model="activeType" color="primary" class="mb-6">
       <v-tab value="ALL">
         <v-icon start>mdi-view-grid</v-icon> All
@@ -18,60 +17,38 @@
       </v-tab>
       <v-tab value="STT">
         <v-icon start>mdi-microphone-settings</v-icon> STT
-        <v-chip size="x-small" class="ml-2" color="blue" variant="tonal">
-          {{ providerStore.getByType('STT').length }}
-        </v-chip>
+        <v-chip size="x-small" class="ml-2" color="blue" variant="tonal">{{ providerStore.getByType('STT').length }}</v-chip>
       </v-tab>
       <v-tab value="TRANSLATION">
         <v-icon start>mdi-translate</v-icon> Translation
-        <v-chip size="x-small" class="ml-2" color="purple" variant="tonal">
-          {{ providerStore.getByType('TRANSLATION').length }}
-        </v-chip>
+        <v-chip size="x-small" class="ml-2" color="purple" variant="tonal">{{ providerStore.getByType('TRANSLATION').length }}</v-chip>
       </v-tab>
       <v-tab value="TTS">
         <v-icon start>mdi-speaker-wireless</v-icon> TTS
-        <v-chip size="x-small" class="ml-2" color="teal" variant="tonal">
-          {{ providerStore.getByType('TTS').length }}
-        </v-chip>
+        <v-chip size="x-small" class="ml-2" color="teal" variant="tonal">{{ providerStore.getByType('TTS').length }}</v-chip>
       </v-tab>
     </v-tabs>
 
-    <!-- Provider grid -->
     <v-row>
-      <v-col
-        v-for="provider in filteredProviders"
-        :key="provider.id"
-        cols="12"
-        sm="6"
-        lg="4"
-      >
-        <ProviderCard
-          :provider="provider"
-          @toggle="providerStore.toggleProvider($event)"
-          @edit="openEdit($event)"
-        />
+      <v-col v-for="provider in filteredProviders" :key="provider.id" cols="12" sm="6" lg="4">
+        <ProviderCard :provider="provider" @toggle="providerStore.toggleProvider($event)" @edit="openEdit($event)" />
       </v-col>
     </v-row>
 
-    <!-- Fallback chain visualization -->
     <v-card rounded="xl" elevation="0" border class="mt-6">
       <v-card-title class="text-body-1 font-weight-bold pt-4 px-4">
         <v-icon start color="primary">mdi-backup-restore</v-icon>
         Fallback Chain
       </v-card-title>
       <v-card-text class="px-4 pb-4">
-        <div v-for="type in (['STT', 'TRANSLATION', 'TTS'] as const)" :key="type" class="fallback-chain mb-4">
+        <div v-for="type in ['STT', 'TRANSLATION', 'TTS']" :key="type" class="fallback-chain mb-4">
           <p class="text-caption font-weight-bold text-uppercase text-medium-emphasis mb-2">{{ type }}</p>
           <div class="chain-row">
             <template v-for="(provider, i) in sortedByPriority(type)" :key="provider.id">
               <div class="chain-node" :class="{ 'chain-node--disabled': !provider.enabled }">
-                <v-icon size="14" :color="provider.enabled ? typeColor(type) : 'grey'">
-                  {{ typeIcon(type) }}
-                </v-icon>
+                <v-icon size="14" :color="provider.enabled ? typeColor(type) : 'grey'">{{ typeIcon(type) }}</v-icon>
                 <span class="text-caption ml-1">{{ provider.name }}</span>
-                <v-chip size="x-small" :color="provider.priority === 1 ? 'amber' : 'grey'" variant="text">
-                  P{{ provider.priority }}
-                </v-chip>
+                <v-chip size="x-small" :color="provider.priority === 1 ? 'amber' : 'grey'" variant="text">P{{ provider.priority }}</v-chip>
               </div>
               <v-icon v-if="i < sortedByPriority(type).length - 1" size="14" color="grey">mdi-arrow-right</v-icon>
             </template>
@@ -80,13 +57,9 @@
       </v-card-text>
     </v-card>
 
-    <!-- Edit dialog -->
     <v-dialog v-model="editDialog" max-width="500">
       <v-card rounded="xl" v-if="editProvider">
-        <v-card-title class="pt-6 px-6">
-          <v-icon start color="primary">mdi-pencil</v-icon>
-          Edit Provider
-        </v-card-title>
+        <v-card-title class="pt-6 px-6"><v-icon start color="primary">mdi-pencil</v-icon>Edit Provider</v-card-title>
         <v-card-text class="px-6">
           <v-text-field label="Cost Limit ($/month)" type="number" v-model.number="editProvider.costLimit" class="mb-3" />
           <v-text-field label="Timeout (ms)" type="number" v-model.number="editProvider.timeoutMs" class="mb-3" />
@@ -102,67 +75,43 @@
   </v-container>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed } from 'vue'
-import { useProviderStore } from '../../stores/provider'
+import { useProviderStore } from '../../stores/provider.js'
 import ProviderCard from '../../components/admin/ProviderCard.vue'
-import type { Provider, ProviderType } from '../../types'
 
 const providerStore = useProviderStore()
-const activeType = ref<'ALL' | ProviderType>('ALL')
+const activeType = ref('ALL')
 const editDialog = ref(false)
-const editProvider = ref<Provider | null>(null)
+const editProvider = ref(null)
 
 const filteredProviders = computed(() =>
-  activeType.value === 'ALL'
-    ? providerStore.providers
-    : providerStore.getByType(activeType.value as ProviderType)
+  activeType.value === 'ALL' ? providerStore.providers : providerStore.getByType(activeType.value)
 )
 
-function sortedByPriority(type: ProviderType) {
+function sortedByPriority(type) {
   return providerStore.getByType(type).slice().sort((a, b) => a.priority - b.priority)
 }
 
-function typeColor(type: ProviderType) {
-  return { STT: 'blue', TRANSLATION: 'purple', TTS: 'teal' }[type]
-}
+const typeColors = { STT: 'blue', TRANSLATION: 'purple', TTS: 'teal' }
+const typeIcons = { STT: 'mdi-microphone-settings', TRANSLATION: 'mdi-translate', TTS: 'mdi-speaker-wireless' }
 
-function typeIcon(type: ProviderType) {
-  return { STT: 'mdi-microphone-settings', TRANSLATION: 'mdi-translate', TTS: 'mdi-speaker-wireless' }[type]
-}
+function typeColor(type) { return typeColors[type] }
+function typeIcon(type) { return typeIcons[type] }
 
-function openEdit(id: string) {
+function openEdit(id) {
   const p = providerStore.providers.find(x => x.id === id)
-  if (p) {
-    editProvider.value = { ...p }
-    editDialog.value = true
-  }
+  if (p) { editProvider.value = { ...p }; editDialog.value = true }
 }
 
 function saveEdit() {
-  if (editProvider.value) {
-    providerStore.updateProvider(editProvider.value.id, editProvider.value)
-  }
+  if (editProvider.value) providerStore.updateProvider(editProvider.value.id, editProvider.value)
   editDialog.value = false
 }
 </script>
 
 <style scoped>
-.fallback-chain { }
-.chain-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.chain-node {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: rgba(0,0,0,0.04);
-  border: 1px solid rgba(0,0,0,0.08);
-}
+.chain-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chain-node { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 8px; background: rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); }
 .chain-node--disabled { opacity: 0.4; }
 </style>

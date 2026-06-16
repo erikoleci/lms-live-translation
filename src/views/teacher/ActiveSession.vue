@@ -1,14 +1,7 @@
 <template>
   <div class="active-session-page" v-if="session">
-    <!-- Top Bar -->
     <div class="session-topbar px-6 py-3">
-      <v-btn
-        icon="mdi-arrow-left"
-        variant="text"
-        size="small"
-        to="/teacher"
-        class="mr-2"
-      />
+      <v-btn icon="mdi-arrow-left" variant="text" size="small" to="/teacher" class="mr-2" />
       <div class="flex-grow-1 min-w-0">
         <div class="d-flex align-center gap-2">
           <h1 class="text-body-1 font-weight-bold text-truncate">{{ session.title }}</h1>
@@ -29,12 +22,9 @@
 
     <v-divider />
 
-    <!-- Main content -->
     <div class="session-body">
-      <!-- Left sidebar -->
       <aside class="session-sidebar">
         <div class="pa-4 d-flex flex-column gap-4" style="height: 100%; overflow-y: auto;">
-          <!-- Controls -->
           <v-card rounded="xl" elevation="0" border>
             <v-card-title class="text-body-2 font-weight-bold pt-3 px-4">
               <v-icon start size="16" color="primary">mdi-remote</v-icon>
@@ -56,79 +46,41 @@
             </v-card-text>
           </v-card>
 
-          <!-- Audio meter -->
           <v-card rounded="xl" elevation="0" border>
             <v-card-title class="text-body-2 font-weight-bold pt-3 px-4">
               <v-icon start size="16" color="primary">mdi-waveform</v-icon>
               Microphone
             </v-card-title>
             <v-card-text class="px-4 pb-4">
-              <AudioLevelMeter
-                :level="sessionStore.audioLevel"
-                :active="sessionStore.micActive"
-                :muted="sessionStore.isMuted"
-              />
-              <v-alert
-                v-if="micError"
-                type="error"
-                density="compact"
-                variant="tonal"
-                rounded="lg"
-                class="mt-3 text-caption"
-              >
-                {{ micError }}
-              </v-alert>
-              <v-alert
-                v-if="sessionStore.micActive && sessionStore.audioLevel < 5 && !sessionStore.isMuted"
-                type="warning"
-                density="compact"
-                variant="tonal"
-                rounded="lg"
-                class="mt-3 text-caption"
-              >
+              <AudioLevelMeter :level="sessionStore.audioLevel" :active="sessionStore.micActive" :muted="sessionStore.isMuted" />
+              <v-alert v-if="micError" type="error" density="compact" variant="tonal" rounded="lg" class="mt-3 text-caption">{{ micError }}</v-alert>
+              <v-alert v-if="sessionStore.micActive && sessionStore.audioLevel < 5 && !sessionStore.isMuted" type="warning" density="compact" variant="tonal" rounded="lg" class="mt-3 text-caption">
                 No audio detected. Check your microphone.
               </v-alert>
             </v-card-text>
           </v-card>
 
-          <!-- QR Code -->
           <QrCodeDisplay :join-code="session.joinCode" :session-id="session.id" class="mx-auto" />
 
-          <!-- Session info -->
           <v-card rounded="xl" elevation="0" border>
             <v-card-title class="text-body-2 font-weight-bold pt-3 px-4">
               <v-icon start size="16" color="primary">mdi-information-outline</v-icon>
               Session Info
             </v-card-title>
             <v-card-text class="px-4 pb-4 d-flex flex-column gap-2">
-              <div class="info-row">
-                <span class="text-caption text-medium-emphasis">Source</span>
-                <LanguageBadge :lang="session.sourceLanguage" />
-              </div>
+              <div class="info-row"><span class="text-caption text-medium-emphasis">Source</span><LanguageBadge :lang="session.sourceLanguage" /></div>
               <div class="info-row">
                 <span class="text-caption text-medium-emphasis">Targets</span>
-                <div class="d-flex gap-1 flex-wrap">
-                  <LanguageBadge v-for="l in session.targetLanguages" :key="l" :lang="l" />
-                </div>
+                <div class="d-flex gap-1 flex-wrap"><LanguageBadge v-for="l in session.targetLanguages" :key="l" :lang="l" /></div>
               </div>
-              <div class="info-row">
-                <span class="text-caption text-medium-emphasis">Access</span>
-                <v-chip size="x-small" variant="tonal">{{ session.accessMode }}</v-chip>
-              </div>
-              <div class="info-row" v-if="session.startedAt">
-                <span class="text-caption text-medium-emphasis">Started</span>
-                <span class="text-caption">{{ formatTime(session.startedAt) }}</span>
-              </div>
-              <div class="info-row">
-                <span class="text-caption text-medium-emphasis">Duration</span>
-                <span class="text-caption">{{ duration }}</span>
-              </div>
+              <div class="info-row"><span class="text-caption text-medium-emphasis">Access</span><v-chip size="x-small" variant="tonal">{{ session.accessMode }}</v-chip></div>
+              <div class="info-row" v-if="session.startedAt"><span class="text-caption text-medium-emphasis">Started</span><span class="text-caption">{{ formatTime(session.startedAt) }}</span></div>
+              <div class="info-row"><span class="text-caption text-medium-emphasis">Duration</span><span class="text-caption">{{ duration }}</span></div>
             </v-card-text>
           </v-card>
         </div>
       </aside>
 
-      <!-- Transcript area -->
       <main class="transcript-area">
         <div class="transcript-header px-4 py-2 d-flex align-center gap-2">
           <v-icon size="16" color="primary">mdi-text-recognition</v-icon>
@@ -148,7 +100,6 @@
     </div>
   </div>
 
-  <!-- Not found -->
   <div v-else class="d-flex align-center justify-center" style="height: 100vh;">
     <div class="text-center">
       <v-icon size="64" color="grey-lighten-2">mdi-video-off</v-icon>
@@ -158,12 +109,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useSessionStore } from '../../stores/session'
-import { useAudio } from '../../composables/useAudio'
-import { useSimulatedTranscript } from '../../composables/useSimulatedTranscript'
+import { useSessionStore } from '../../stores/session.js'
+import { useAudio } from '../../composables/useAudio.js'
+import { useSimulatedTranscript } from '../../composables/useSimulatedTranscript.js'
 import SessionControls from '../../components/teacher/SessionControls.vue'
 import AudioLevelMeter from '../../components/teacher/AudioLevelMeter.vue'
 import QrCodeDisplay from '../../components/teacher/QrCodeDisplay.vue'
@@ -176,12 +127,12 @@ const route = useRoute()
 const sessionStore = useSessionStore()
 const { requestMic, stopMic, error: micError } = useAudio()
 
-const sessionId = route.params.id as string
+const sessionId = route.params.id
 const session = computed(() => sessionStore.getSession(sessionId))
 const segments = computed(() => sessionStore.getTranscript(sessionId))
 const actionLoading = ref(false)
-const wsStatus = ref<'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING' | 'CONNECTING'>('DISCONNECTED')
-const transcriptRef = ref<InstanceType<typeof LiveTranscript> | null>(null)
+const wsStatus = ref('DISCONNECTED')
+const transcriptRef = ref(null)
 
 const { start: startSim, stop: stopSim } = useSimulatedTranscript(sessionId)
 
@@ -193,7 +144,7 @@ const duration = computed(() => {
   return `${m}m ${s}s`
 })
 
-let durationInterval: ReturnType<typeof setInterval>
+let durationInterval
 
 onMounted(() => {
   sessionStore.setActiveSession(sessionId)
@@ -257,67 +208,20 @@ async function handleToggleMic() {
   }
 }
 
-function formatTime(iso: string) {
+function formatTime(iso) {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 </script>
 
 <style scoped>
-.active-session-page {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
-.session-topbar {
-  display: flex;
-  align-items: center;
-  background: white;
-  min-height: 60px;
-}
-.session-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-.session-sidebar {
-  width: 320px;
-  min-width: 280px;
-  border-right: 1px solid rgba(0,0,0,0.08);
-  overflow: hidden;
-  background: #FAFAFA;
-}
-.transcript-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.transcript-header {
-  background: white;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-  min-height: 44px;
-}
-.transcript-scroll {
-  flex: 1;
-  overflow: hidden;
-}
-.info-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.live-dot-sm {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #4caf50;
-  animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
+.active-session-page { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.session-topbar { display: flex; align-items: center; background: white; min-height: 60px; }
+.session-body { display: flex; flex: 1; overflow: hidden; }
+.session-sidebar { width: 320px; min-width: 280px; border-right: 1px solid rgba(0,0,0,0.08); overflow: hidden; background: #FAFAFA; }
+.transcript-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.transcript-header { background: white; border-bottom: 1px solid rgba(0,0,0,0.08); min-height: 44px; }
+.transcript-scroll { flex: 1; overflow: hidden; }
+.info-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.live-dot-sm { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4caf50; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 </style>

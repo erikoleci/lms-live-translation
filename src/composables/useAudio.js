@@ -1,16 +1,16 @@
 import { ref, onUnmounted } from 'vue'
-import { useSessionStore } from '../stores/session'
+import { useSessionStore } from '../stores/session.js'
 
 export function useAudio() {
   const sessionStore = useSessionStore()
-  const stream = ref<MediaStream | null>(null)
-  const analyser = ref<AnalyserNode | null>(null)
-  const audioCtx = ref<AudioContext | null>(null)
-  const animFrame = ref<number>(0)
-  const error = ref<string | null>(null)
+  const stream = ref(null)
+  const analyser = ref(null)
+  const audioCtx = ref(null)
+  const animFrame = ref(0)
+  const error = ref(null)
   const supported = typeof navigator !== 'undefined' && !!navigator.mediaDevices
 
-  async function requestMic(): Promise<boolean> {
+  async function requestMic() {
     error.value = null
     if (!supported) {
       error.value = 'Microphone not supported in this browser.'
@@ -26,12 +26,10 @@ export function useAudio() {
       sessionStore.setMicActive(true)
       startLevelMonitor()
       return true
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        error.value = e.name === 'NotAllowedError'
-          ? 'Microphone permission denied. Please allow access in your browser settings.'
-          : `Microphone error: ${e.message}`
-      }
+    } catch (e) {
+      error.value = e.name === 'NotAllowedError'
+        ? 'Microphone permission denied. Please allow access in your browser settings.'
+        : `Microphone error: ${e.message}`
       return false
     }
   }

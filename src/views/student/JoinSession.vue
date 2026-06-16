@@ -2,7 +2,6 @@
   <div class="join-page">
     <div class="join-card-wrapper">
       <v-card rounded="xl" elevation="8" max-width="460" width="100%">
-        <!-- Header -->
         <div class="join-header">
           <div class="header-bg" />
           <div class="header-content pa-8 pb-6">
@@ -10,27 +9,16 @@
               <v-icon color="primary" size="32">mdi-translate</v-icon>
             </v-avatar>
             <h1 class="text-h5 font-weight-bold text-white">Join Live Session</h1>
-            <p class="text-body-2 text-white mt-1" style="opacity: 0.85">
-              Enter your session code or use the QR link to join
-            </p>
+            <p class="text-body-2 text-white mt-1" style="opacity: 0.85">Enter your session code or use the QR link to join</p>
           </div>
         </div>
 
         <v-card-text class="pa-6">
-          <!-- Consent notice -->
-          <v-alert
-            type="info"
-            variant="tonal"
-            rounded="lg"
-            density="compact"
-            class="mb-4 text-caption"
-            icon="mdi-shield-lock"
-          >
+          <v-alert type="info" variant="tonal" rounded="lg" density="compact" class="mb-4 text-caption" icon="mdi-shield-lock">
             This session uses AI to generate real-time captions and audio. By joining, you consent to AI processing.
           </v-alert>
 
           <v-form ref="formRef" @submit.prevent="submit">
-            <!-- Code input -->
             <v-text-field
               v-model="form.code"
               label="Session Code"
@@ -43,7 +31,6 @@
               autofocus
               @input="form.code = form.code.toUpperCase()"
             />
-
             <v-text-field
               v-model="form.name"
               label="Your Name (optional)"
@@ -54,20 +41,10 @@
               class="mb-4"
             />
 
-            <!-- Language selection -->
-            <p class="text-caption font-weight-bold text-uppercase text-medium-emphasis mb-3">
-              Select Display Language
-            </p>
+            <p class="text-caption font-weight-bold text-uppercase text-medium-emphasis mb-3">Select Display Language</p>
             <LanguageSelector v-model="form.language" class="mb-5" />
 
-            <v-btn
-              type="submit"
-              color="primary"
-              size="large"
-              block
-              :loading="joining"
-              prepend-icon="mdi-login"
-            >
+            <v-btn type="submit" color="primary" size="large" block :loading="joining" prepend-icon="mdi-login">
               Join Session
             </v-btn>
           </v-form>
@@ -83,15 +60,12 @@
       </v-card>
     </div>
 
-    <!-- Error dialog -->
     <v-dialog v-model="errorDialog" max-width="360">
       <v-card rounded="xl">
         <v-card-text class="pa-6 text-center">
           <v-icon size="48" color="error" class="mb-3">mdi-alert-circle</v-icon>
           <p class="text-body-1 font-weight-bold">Session Not Found</p>
-          <p class="text-body-2 text-medium-emphasis mt-1">
-            No active session was found with code <strong>{{ form.code }}</strong>. Check the code and try again.
-          </p>
+          <p class="text-body-2 text-medium-emphasis mt-1">No active session was found with code <strong>{{ form.code }}</strong>. Check the code and try again.</p>
         </v-card-text>
         <v-card-actions class="px-6 pb-6">
           <v-btn block color="primary" variant="flat" @click="errorDialog = false">Try Again</v-btn>
@@ -101,12 +75,11 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useSessionStore } from '../../stores/session'
-import { useParticipantStore } from '../../stores/participant'
-import type { Language } from '../../types'
+import { useSessionStore } from '../../stores/session.js'
+import { useParticipantStore } from '../../stores/participant.js'
 import LanguageSelector from '../../components/student/LanguageSelector.vue'
 
 const route = useRoute()
@@ -117,16 +90,10 @@ const formRef = ref()
 const joining = ref(false)
 const errorDialog = ref(false)
 
-const form = ref({
-  code: (route.params.code as string) ?? '',
-  name: '',
-  language: 'EN' as Language,
-})
+const form = ref({ code: '', name: '', language: 'EN' })
 
 onMounted(() => {
-  if (route.params.code) {
-    form.value.code = (route.params.code as string).toUpperCase()
-  }
+  if (route.params.code) form.value.code = route.params.code.toUpperCase()
 })
 
 async function submit() {
@@ -153,20 +120,9 @@ async function submit() {
 </script>
 
 <style scoped>
-.join-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #E3F2FD 0%, #E8EAF6 100%);
-  padding: 24px;
-}
+.join-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #E3F2FD 0%, #E8EAF6 100%); padding: 24px; }
 .join-card-wrapper { width: 100%; max-width: 460px; }
 .join-header { position: relative; overflow: hidden; border-radius: 24px 24px 0 0; }
-.header-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #1565C0, #0288D1);
-}
+.header-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #1565C0, #0288D1); }
 .header-content { position: relative; z-index: 1; }
 </style>

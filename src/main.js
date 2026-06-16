@@ -1,8 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { createRouter, createWebHashHistory } from 'vue-router'
-import vuetify from './plugins/vuetify'
-import router from './router'
+import vuetify from './plugins/vuetify.js'
+import router from './router/index.js'
 import App from './App.vue'
 
 const pinia = createPinia()

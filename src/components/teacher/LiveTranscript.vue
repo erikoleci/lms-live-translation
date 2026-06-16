@@ -4,7 +4,6 @@
       <v-icon size="48" color="grey-lighten-2">mdi-text-recognition</v-icon>
       <p class="text-body-2 text-disabled mt-2">Transcript will appear here once the session starts…</p>
     </div>
-
     <div v-for="seg in segments" :key="seg.id" class="segment" :class="{ 'segment--partial': !seg.isFinal }">
       <div class="segment-meta">
         <v-icon size="12" :color="seg.isFinal ? 'success' : 'warning'" class="mr-1">
@@ -27,30 +26,22 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, watch, nextTick } from 'vue'
-import type { TranscriptSegment } from '../../types'
 import LanguageBadge from '../shared/LanguageBadge.vue'
 
-defineProps<{ segments: TranscriptSegment[] }>()
+const props = defineProps({ segments: Array })
+const containerRef = ref(null)
 
-const containerRef = ref<HTMLElement | null>(null)
-
-watch(
-  () => containerRef.value,
-  () => scrollToBottom(),
-  { flush: 'post' }
-)
+watch(() => props.segments?.length, () => scrollToBottom(), { flush: 'post' })
 
 function scrollToBottom() {
   nextTick(() => {
-    if (containerRef.value) {
-      containerRef.value.scrollTop = containerRef.value.scrollHeight
-    }
+    if (containerRef.value) containerRef.value.scrollTop = containerRef.value.scrollHeight
   })
 }
 
-function formatTime(ms: number) {
+function formatTime(ms) {
   const s = Math.floor(ms / 1000)
   const m = Math.floor(s / 60)
   return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
@@ -60,58 +51,13 @@ defineExpose({ scrollToBottom })
 </script>
 
 <style scoped>
-.live-transcript {
-  height: 100%;
-  overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  scroll-behavior: smooth;
-}
-.empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.6;
-}
-.segment {
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.03);
-  border-left: 3px solid #1565C0;
-  transition: opacity 0.3s;
-}
-.segment--partial {
-  border-left-color: #ff9800;
-  opacity: 0.8;
-}
-.segment-meta {
-  display: flex;
-  align-items: center;
-  margin-bottom: 4px;
-}
-.original-text {
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.5;
-  margin: 0;
-}
-.translations {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.translation-row {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-.translation-text {
-  font-size: 13px;
-  color: #666;
-  font-style: italic;
-}
+.live-transcript { height: 100%; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.6; }
+.segment { padding: 12px 16px; border-radius: 12px; background: rgba(0,0,0,0.03); border-left: 3px solid #1565C0; transition: opacity 0.3s; }
+.segment--partial { border-left-color: #ff9800; opacity: 0.8; }
+.segment-meta { display: flex; align-items: center; margin-bottom: 4px; }
+.original-text { font-size: 15px; font-weight: 500; line-height: 1.5; margin: 0; }
+.translations { display: flex; flex-direction: column; gap: 4px; }
+.translation-row { display: flex; align-items: baseline; gap: 4px; }
+.translation-text { font-size: 13px; color: #666; font-style: italic; }
 </style>

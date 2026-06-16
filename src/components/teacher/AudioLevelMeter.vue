@@ -23,47 +23,21 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const BAR_COUNT = 20
 
-defineProps<{
-  level: number
-  active: boolean
-  muted: boolean
-}>()
+defineProps({
+  level: Number,
+  active: Boolean,
+  muted: Boolean,
+})
 </script>
 
 <style scoped>
-.audio-meter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(0,0,0,0.04);
-  border-radius: 12px;
-}
-.meter-label {
-  display: flex;
-  align-items: center;
-  min-width: 60px;
-}
-.bars {
-  display: flex;
-  gap: 2px;
-  align-items: flex-end;
-  height: 24px;
-}
-.bar {
-  width: 4px;
-  height: 100%;
-  background: #e0e0e0;
-  border-radius: 2px;
-  transition: background 0.08s;
-}
-.bar--active {
-  background: #4caf50;
-}
-.bar--warn {
-  background: #ff9800;
-}
+.audio-meter { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(0,0,0,0.04); border-radius: 12px; }
+.meter-label { display: flex; align-items: center; min-width: 60px; }
+.bars { display: flex; gap: 2px; align-items: flex-end; height: 24px; }
+.bar { width: 4px; height: 100%; background: #e0e0e0; border-radius: 2px; transition: background 0.08s; }
+.bar--active { background: #4caf50; }
+.bar--warn { background: #ff9800; }
 </style>

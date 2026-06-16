@@ -35,22 +35,10 @@ export default createVuetify({
     },
   },
   defaults: {
-    VBtn: {
-      rounded: 'lg',
-    },
-    VCard: {
-      rounded: 'xl',
-    },
-    VTextField: {
-      variant: 'outlined',
-      rounded: 'lg',
-    },
-    VSelect: {
-      variant: 'outlined',
-      rounded: 'lg',
-    },
-    VChip: {
-      rounded: 'lg',
-    },
+    VBtn: { rounded: 'lg' },
+    VCard: { rounded: 'xl' },
+    VTextField: { variant: 'outlined', rounded: 'lg' },
+    VSelect: { variant: 'outlined', rounded: 'lg' },
+    VChip: { rounded: 'lg' },
   },
 })

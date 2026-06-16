@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="captions-page"
-    :class="{ 'captions-page--dark': uiStore.darkMode }"
-  >
-    <!-- Top bar -->
+  <div class="captions-page" :class="{ 'captions-page--dark': uiStore.darkMode }">
     <div class="captions-topbar">
       <div class="d-flex align-center gap-2 flex-grow-1 min-w-0">
         <v-icon size="20" :color="uiStore.darkMode ? 'white' : 'primary'">mdi-translate</v-icon>
@@ -17,7 +13,6 @@
       </div>
 
       <div class="d-flex align-center gap-2">
-        <!-- Language -->
         <v-menu>
           <template #activator="{ props }">
             <v-btn v-bind="props" variant="tonal" size="small" rounded="lg">
@@ -26,56 +21,23 @@
             </v-btn>
           </template>
           <v-list rounded="xl" elevation="4">
-            <v-list-item
-              v-for="lang in availableLangs"
-              :key="lang.value"
-              @click="selectedLanguage = lang.value"
-              :active="selectedLanguage === lang.value"
-              active-color="primary"
-              rounded="lg"
-            >
-              <template #prepend>
-                <span class="mr-2" style="font-size: 18px">{{ lang.flag }}</span>
-              </template>
+            <v-list-item v-for="lang in availableLangs" :key="lang.value" @click="selectedLanguage = lang.value" :active="selectedLanguage === lang.value" active-color="primary" rounded="lg">
+              <template #prepend><span class="mr-2" style="font-size: 18px">{{ lang.flag }}</span></template>
               {{ lang.label }}
             </v-list-item>
           </v-list>
         </v-menu>
 
-        <!-- Settings panel trigger -->
-        <v-btn
-          :icon="showSettings ? 'mdi-close' : 'mdi-tune'"
-          variant="tonal"
-          size="small"
-          @click="showSettings = !showSettings"
-        />
-
-        <!-- Dark mode -->
-        <v-btn
-          :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-          variant="tonal"
-          size="small"
-          @click="uiStore.toggleDarkMode()"
-        />
-
-        <!-- Leave -->
-        <v-btn
-          icon="mdi-exit-to-app"
-          variant="tonal"
-          size="small"
-          color="error"
-          @click="leave"
-        />
+        <v-btn :icon="showSettings ? 'mdi-close' : 'mdi-tune'" variant="tonal" size="small" @click="showSettings = !showSettings" />
+        <v-btn :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'" variant="tonal" size="small" @click="uiStore.toggleDarkMode()" />
+        <v-btn icon="mdi-exit-to-app" variant="tonal" size="small" color="error" @click="leave" />
       </div>
     </div>
 
-    <!-- Body -->
     <div class="captions-body">
-      <!-- Settings panel -->
       <transition name="slide-x">
         <aside v-if="showSettings" class="settings-panel">
           <div class="pa-4 d-flex flex-column gap-4">
-            <!-- Language selector -->
             <v-card rounded="xl" elevation="0" border>
               <v-card-title class="text-body-2 font-weight-bold pt-3 px-4">
                 <v-icon start size="16" color="primary">mdi-translate</v-icon>
@@ -83,68 +45,34 @@
               </v-card-title>
               <v-card-text class="px-4 pb-4">
                 <LanguageSelector v-model="selectedLanguage" />
-                <v-switch
-                  v-model="showOriginal"
-                  label="Show original text"
-                  color="primary"
-                  density="compact"
-                  hide-details
-                  class="mt-3"
-                />
+                <v-switch v-model="showOriginal" label="Show original text" color="primary" density="compact" hide-details class="mt-3" />
               </v-card-text>
             </v-card>
 
-            <!-- Font size -->
             <v-card rounded="xl" elevation="0" border>
               <v-card-title class="text-body-2 font-weight-bold pt-3 px-4">
                 <v-icon start size="16" color="primary">mdi-format-size</v-icon>
                 Caption Size
               </v-card-title>
               <v-card-text class="px-4 pb-4">
-                <v-slider
-                  :model-value="uiStore.captionFontSize"
-                  min="12"
-                  max="36"
-                  step="2"
-                  color="primary"
-                  track-color="grey-lighten-2"
-                  thumb-label
-                  @update:model-value="uiStore.setCaptionFontSize($event)"
-                />
+                <v-slider :model-value="uiStore.captionFontSize" min="12" max="36" step="2" color="primary" track-color="grey-lighten-2" thumb-label @update:model-value="uiStore.setCaptionFontSize($event)" />
                 <div class="d-flex gap-2">
-                  <v-btn
-                    v-for="size in [14, 18, 24, 32]"
-                    :key="size"
-                    size="small"
-                    :variant="uiStore.captionFontSize === size ? 'flat' : 'outlined'"
-                    :color="uiStore.captionFontSize === size ? 'primary' : 'default'"
-                    @click="uiStore.setCaptionFontSize(size)"
-                  >
+                  <v-btn v-for="size in [14, 18, 24, 32]" :key="size" size="small" :variant="uiStore.captionFontSize === size ? 'flat' : 'outlined'" :color="uiStore.captionFontSize === size ? 'primary' : 'default'" @click="uiStore.setCaptionFontSize(size)">
                     {{ size }}px
                   </v-btn>
                 </div>
               </v-card-text>
             </v-card>
 
-            <!-- Audio settings -->
-            <AudioSettings
-              v-model:audio-enabled="audioEnabled"
-              v-model:selected-voice="selectedVoice"
-              :voices="availableVoices"
-            />
+            <AudioSettings v-model:audio-enabled="audioEnabled" v-model:selected-voice="selectedVoice" :voices="availableVoices" />
 
-            <!-- Participants -->
             <v-card rounded="xl" elevation="0" border>
               <v-card-title class="text-body-2 font-weight-bold pt-3 px-4">
                 <v-icon start size="16" color="primary">mdi-account-group</v-icon>
                 Participants ({{ session?.participantCount ?? 0 }})
               </v-card-title>
               <v-card-text class="px-4 pb-4">
-                <div
-                  v-for="p in participants"
-                  :key="p.id"
-                  class="participant-row"
-                >
+                <div v-for="p in participants" :key="p.id" class="participant-row">
                   <v-avatar size="28" :color="p.connectionStatus === 'CONNECTED' ? 'primary' : 'grey'" class="mr-2">
                     <span class="text-caption text-white">{{ p.anonymousName[0] }}</span>
                   </v-avatar>
@@ -157,7 +85,6 @@
         </aside>
       </transition>
 
-      <!-- Caption area -->
       <main class="caption-main">
         <CaptionStream
           :segments="segments"
@@ -169,7 +96,6 @@
       </main>
     </div>
 
-    <!-- Audio ON indicator -->
     <div v-if="audioEnabled" class="audio-indicator">
       <v-icon size="14" color="white">mdi-volume-high</v-icon>
       <span class="text-caption text-white ml-1">Audio ON · AI-generated</span>
@@ -177,14 +103,13 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useSessionStore } from '../../stores/session'
-import { useParticipantStore } from '../../stores/participant'
-import { useProviderStore } from '../../stores/provider'
-import { useUiStore } from '../../stores/ui'
-import type { Language } from '../../types'
+import { useSessionStore } from '../../stores/session.js'
+import { useParticipantStore } from '../../stores/participant.js'
+import { useProviderStore } from '../../stores/provider.js'
+import { useUiStore } from '../../stores/ui.js'
 import CaptionStream from '../../components/student/CaptionStream.vue'
 import AudioSettings from '../../components/student/AudioSettings.vue'
 import LanguageSelector from '../../components/student/LanguageSelector.vue'
@@ -199,30 +124,30 @@ const participantStore = useParticipantStore()
 const providerStore = useProviderStore()
 const uiStore = useUiStore()
 
-const sessionId = route.params.id as string
+const sessionId = route.params.id
 const session = computed(() => sessionStore.getSession(sessionId))
 const segments = computed(() => sessionStore.getTranscript(sessionId))
 const participants = computed(() => participantStore.getParticipantsForSession(sessionId))
 
-const selectedLanguage = ref<Language>(participantStore.currentParticipant?.targetLanguage ?? 'EN')
+const selectedLanguage = ref(participantStore.currentParticipant?.targetLanguage ?? 'EN')
 const showOriginal = ref(false)
 const showSettings = ref(false)
 const audioEnabled = ref(false)
 const selectedVoice = ref('en-US-alloy')
-const wsStatus = ref<'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING' | 'CONNECTING'>('CONNECTED')
+const wsStatus = ref('CONNECTED')
 
 const availableLangs = [
-  { value: 'IT' as Language, label: 'Italian', flag: '🇮🇹' },
-  { value: 'EN' as Language, label: 'English', flag: '🇬🇧' },
-  { value: 'SQ' as Language, label: 'Albanian', flag: '🇦🇱' },
+  { value: 'IT', label: 'Italian', flag: '🇮🇹' },
+  { value: 'EN', label: 'English', flag: '🇬🇧' },
+  { value: 'SQ', label: 'Albanian', flag: '🇦🇱' },
 ]
 
-const availableVoices = computed(() => {
-  return providerStore.providers
+const availableVoices = computed(() =>
+  providerStore.providers
     .filter(p => p.providerType === 'TTS' && p.enabled)
     .flatMap(p => p.supportedVoices ?? [])
     .filter(v => v.language === selectedLanguage.value)
-})
+)
 
 function leave() {
   if (participantStore.currentParticipant) {
@@ -241,70 +166,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.captions-page {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-  background: #F5F7FA;
-  transition: background 0.3s;
-}
-.captions-page--dark {
-  background: #12121F;
-  color: white;
-}
-.captions-topbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: white;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-  min-height: 60px;
-}
-.captions-page--dark .captions-topbar {
-  background: #1E1E2E;
-  border-bottom-color: rgba(255,255,255,0.08);
-}
-.captions-body {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-.settings-panel {
-  width: 320px;
-  min-width: 280px;
-  border-right: 1px solid rgba(0,0,0,0.08);
-  overflow-y: auto;
-  background: white;
-}
-.captions-page--dark .settings-panel {
-  background: #1E1E2E;
-  border-right-color: rgba(255,255,255,0.08);
-}
-.caption-main {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.participant-row {
-  display: flex;
-  align-items: center;
-  padding: 4px 0;
-}
-.audio-indicator {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  padding: 6px 12px;
-  background: rgba(0,0,0,0.7);
-  border-radius: 20px;
-  backdrop-filter: blur(8px);
-  z-index: 100;
-}
+.captions-page { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #F5F7FA; transition: background 0.3s; }
+.captions-page--dark { background: #12121F; color: white; }
+.captions-topbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: white; border-bottom: 1px solid rgba(0,0,0,0.08); min-height: 60px; }
+.captions-page--dark .captions-topbar { background: #1E1E2E; border-bottom-color: rgba(255,255,255,0.08); }
+.captions-body { flex: 1; display: flex; overflow: hidden; }
+.settings-panel { width: 320px; min-width: 280px; border-right: 1px solid rgba(0,0,0,0.08); overflow-y: auto; background: white; }
+.captions-page--dark .settings-panel { background: #1E1E2E; border-right-color: rgba(255,255,255,0.08); }
+.caption-main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.participant-row { display: flex; align-items: center; padding: 4px 0; }
+.audio-indicator { position: fixed; bottom: 16px; right: 16px; display: flex; align-items: center; padding: 6px 12px; background: rgba(0,0,0,0.7); border-radius: 20px; backdrop-filter: blur(8px); z-index: 100; }
 .slide-x-enter-from { transform: translateX(-100%); opacity: 0; }
 .slide-x-enter-active { transition: all 0.25s ease; }
 .slide-x-leave-to { transform: translateX(-100%); opacity: 0; }

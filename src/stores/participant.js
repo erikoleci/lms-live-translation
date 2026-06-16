@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { Participant, Language } from '../types'
+import { ref } from 'vue'
 
-const MOCK_PARTICIPANTS: Participant[] = [
+const MOCK_PARTICIPANTS = [
   { id: 'p1', sessionId: 'sess-001', anonymousName: 'Student A', targetLanguage: 'EN', audioEnabled: true, voiceCode: 'en-US-female-1', joinedAt: new Date(Date.now() - 1200000).toISOString(), connectionStatus: 'CONNECTED' },
   { id: 'p2', sessionId: 'sess-001', anonymousName: 'Student B', targetLanguage: 'SQ', audioEnabled: false, voiceCode: 'sq-AL-female-1', joinedAt: new Date(Date.now() - 900000).toISOString(), connectionStatus: 'CONNECTED' },
   { id: 'p3', sessionId: 'sess-001', anonymousName: 'Marco R.', targetLanguage: 'EN', audioEnabled: true, voiceCode: 'en-US-male-1', joinedAt: new Date(Date.now() - 600000).toISOString(), connectionStatus: 'CONNECTED' },
@@ -11,16 +10,15 @@ const MOCK_PARTICIPANTS: Participant[] = [
 ]
 
 export const useParticipantStore = defineStore('participant', () => {
-  const participants = ref<Participant[]>(MOCK_PARTICIPANTS)
+  const participants = ref(MOCK_PARTICIPANTS)
+  const currentParticipant = ref(null)
 
-  const currentParticipant = ref<Participant | null>(null)
-
-  function getParticipantsForSession(sessionId: string) {
+  function getParticipantsForSession(sessionId) {
     return participants.value.filter(p => p.sessionId === sessionId && !p.leftAt)
   }
 
-  function joinSession(sessionId: string, name: string, language: Language): Participant {
-    const p: Participant = {
+  function joinSession(sessionId, name, language) {
+    const p = {
       id: `p-${Date.now()}`,
       sessionId,
       anonymousName: name || `Guest-${Math.floor(Math.random() * 9999)}`,
@@ -35,24 +33,17 @@ export const useParticipantStore = defineStore('participant', () => {
     return p
   }
 
-  function updatePreferences(participantId: string, prefs: Partial<Pick<Participant, 'targetLanguage' | 'audioEnabled' | 'voiceCode'>>) {
+  function updatePreferences(participantId, prefs) {
     const p = participants.value.find(x => x.id === participantId)
     if (p) Object.assign(p, prefs)
     if (currentParticipant.value?.id === participantId) Object.assign(currentParticipant.value, prefs)
   }
 
-  function leaveSession(participantId: string) {
+  function leaveSession(participantId) {
     const p = participants.value.find(x => x.id === participantId)
     if (p) p.leftAt = new Date().toISOString()
     if (currentParticipant.value?.id === participantId) currentParticipant.value = null
   }
 
-  return {
-    participants,
-    currentParticipant,
-    getParticipantsForSession,
-    joinSession,
-    updatePreferences,
-    leaveSession,
-  }
+  return { participants, currentParticipant, getParticipantsForSession, joinSession, updatePreferences, leaveSession }
 })

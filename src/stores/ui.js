@@ -10,7 +10,7 @@ export const useUiStore = defineStore('ui', () => {
     darkMode.value = !darkMode.value
   }
 
-  function setCaptionFontSize(size: number) {
+  function setCaptionFontSize(size) {
     captionFontSize.value = Math.min(36, Math.max(12, size))
   }
 

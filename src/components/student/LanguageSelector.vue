@@ -16,46 +16,22 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type { Language } from '../../types'
-
-defineProps<{ modelValue: Language }>()
-const emit = defineEmits<{ 'update:modelValue': [Language] }>()
+<script setup>
+defineProps({ modelValue: String })
+const emit = defineEmits(['update:modelValue'])
 
 const LANGUAGES = [
-  { value: 'IT' as Language, label: 'Italian', flag: '🇮🇹' },
-  { value: 'EN' as Language, label: 'English', flag: '🇬🇧' },
-  { value: 'SQ' as Language, label: 'Albanian', flag: '🇦🇱' },
+  { value: 'IT', label: 'Italian', flag: '🇮🇹' },
+  { value: 'EN', label: 'English', flag: '🇬🇧' },
+  { value: 'SQ', label: 'Albanian', flag: '🇦🇱' },
 ]
 </script>
 
 <style scoped>
-.lang-grid {
-  display: flex;
-  gap: 8px;
-}
-.lang-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 16px;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.04);
-  cursor: pointer;
-  transition: all 0.15s;
-  min-width: 80px;
-  font-family: inherit;
-}
-.lang-btn:hover {
-  background: rgba(21,101,192,0.08);
-  border-color: rgba(21,101,192,0.3);
-}
-.lang-btn--active {
-  background: rgba(21,101,192,0.12);
-  border-color: #1565C0;
-}
+.lang-grid { display: flex; gap: 8px; }
+.lang-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 16px; border: 2px solid transparent; border-radius: 12px; background: rgba(0,0,0,0.04); cursor: pointer; transition: all 0.15s; min-width: 80px; font-family: inherit; }
+.lang-btn:hover { background: rgba(21,101,192,0.08); border-color: rgba(21,101,192,0.3); }
+.lang-btn--active { background: rgba(21,101,192,0.12); border-color: #1565C0; }
 .lang-flag { font-size: 24px; }
 .lang-name { font-size: 12px; font-weight: 600; color: #555; }
 .lang-btn--active .lang-name { color: #1565C0; }

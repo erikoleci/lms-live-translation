@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Session, SessionStatus, SessionCreatePayload, TranscriptSegment } from '../types'
 
-const MOCK_SESSIONS: Session[] = [
+const MOCK_SESSIONS = [
   {
     id: 'sess-001',
     title: 'Introduction to Machine Learning',
@@ -60,20 +59,20 @@ const MOCK_SESSIONS: Session[] = [
   },
 ]
 
-const MOCK_TRANSCRIPT: TranscriptSegment[] = [
+const MOCK_TRANSCRIPT = [
   {
     id: 'seg-001',
     sessionId: 'sess-001',
     sequenceNo: 1,
     sourceLanguage: 'IT',
-    originalText: 'Benvenuti alla lezione di oggi sull\'apprendimento automatico.',
+    originalText: "Benvenuti alla lezione di oggi sull'apprendimento automatico.",
     isFinal: true,
     confidence: 0.98,
     startOffsetMs: 0,
     endOffsetMs: 3200,
     createdAt: new Date(Date.now() - 900000).toISOString(),
     translations: [
-      { id: 't1', transcriptSegmentId: 'seg-001', targetLanguage: 'EN', translatedText: 'Welcome to today\'s lesson on machine learning.', isFinal: true, createdAt: new Date().toISOString() },
+      { id: 't1', transcriptSegmentId: 'seg-001', targetLanguage: 'EN', translatedText: "Welcome to today's lesson on machine learning.", isFinal: true, createdAt: new Date().toISOString() },
       { id: 't2', transcriptSegmentId: 'seg-001', targetLanguage: 'SQ', translatedText: 'Mirë se vini në mësimin e sotëm mbi mësimin e makinerive.', isFinal: true, createdAt: new Date().toISOString() },
     ],
   },
@@ -98,7 +97,7 @@ const MOCK_TRANSCRIPT: TranscriptSegment[] = [
     sessionId: 'sess-001',
     sequenceNo: 3,
     sourceLanguage: 'IT',
-    originalText: 'Un\'intelligenza artificiale impara dai dati attraverso algoritmi di ottimizzazione.',
+    originalText: "Un'intelligenza artificiale impara dai dati attraverso algoritmi di ottimizzazione.",
     isFinal: true,
     confidence: 0.94,
     startOffsetMs: 7400,
@@ -112,9 +111,9 @@ const MOCK_TRANSCRIPT: TranscriptSegment[] = [
 ]
 
 export const useSessionStore = defineStore('session', () => {
-  const sessions = ref<Session[]>(MOCK_SESSIONS)
-  const activeSessionId = ref<string | null>(null)
-  const transcript = ref<TranscriptSegment[]>(MOCK_TRANSCRIPT)
+  const sessions = ref(MOCK_SESSIONS)
+  const activeSessionId = ref(null)
+  const transcript = ref(MOCK_TRANSCRIPT)
   const micActive = ref(false)
   const audioLevel = ref(0)
   const isMuted = ref(false)
@@ -131,16 +130,16 @@ export const useSessionStore = defineStore('session', () => {
     sessions.value.filter(s => s.status === 'ENDED' || s.status === 'EXPIRED')
   )
 
-  function getSession(id: string) {
+  function getSession(id) {
     return sessions.value.find(s => s.id === id)
   }
 
-  function getTranscript(sessionId: string) {
+  function getTranscript(sessionId) {
     return transcript.value.filter(s => s.sessionId === sessionId)
   }
 
-  function createSession(payload: SessionCreatePayload): Session {
-    const newSession: Session = {
+  function createSession(payload) {
+    const newSession = {
       id: `sess-${Date.now()}`,
       title: payload.title,
       courseId: payload.courseId,
@@ -161,7 +160,7 @@ export const useSessionStore = defineStore('session', () => {
     return newSession
   }
 
-  function updateSessionStatus(id: string, status: SessionStatus) {
+  function updateSessionStatus(id, status) {
     const session = sessions.value.find(s => s.id === id)
     if (!session) return
     session.status = status
@@ -174,15 +173,15 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  function setActiveSession(id: string | null) {
+  function setActiveSession(id) {
     activeSessionId.value = id
   }
 
-  function setMicActive(active: boolean) {
+  function setMicActive(active) {
     micActive.value = active
   }
 
-  function setAudioLevel(level: number) {
+  function setAudioLevel(level) {
     audioLevel.value = level
   }
 
@@ -190,8 +189,10 @@ export const useSessionStore = defineStore('session', () => {
     isMuted.value = !isMuted.value
   }
 
-  function addTranscriptSegment(segment: TranscriptSegment) {
-    const existing = transcript.value.findIndex(s => s.sequenceNo === segment.sequenceNo && s.sessionId === segment.sessionId)
+  function addTranscriptSegment(segment) {
+    const existing = transcript.value.findIndex(
+      s => s.sequenceNo === segment.sequenceNo && s.sessionId === segment.sessionId
+    )
     if (existing !== -1) {
       transcript.value[existing] = segment
     } else {
@@ -200,23 +201,9 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   return {
-    sessions,
-    activeSessionId,
-    transcript,
-    micActive,
-    audioLevel,
-    isMuted,
-    activeSession,
-    activeSessions,
-    endedSessions,
-    getSession,
-    getTranscript,
-    createSession,
-    updateSessionStatus,
-    setActiveSession,
-    setMicActive,
-    setAudioLevel,
-    toggleMute,
-    addTranscriptSegment,
+    sessions, activeSessionId, transcript, micActive, audioLevel, isMuted,
+    activeSession, activeSessions, endedSessions,
+    getSession, getTranscript, createSession, updateSessionStatus,
+    setActiveSession, setMicActive, setAudioLevel, toggleMute, addTranscriptSegment,
   }
 })

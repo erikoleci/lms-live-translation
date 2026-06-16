@@ -12,84 +12,28 @@
 
       <v-card-text class="px-6">
         <v-form ref="formRef" @submit.prevent="submit">
-          <v-text-field
-            v-model="form.title"
-            label="Session Title"
-            placeholder="e.g. Introduction to Machine Learning"
-            prepend-inner-icon="mdi-text"
-            :rules="[r => !!r || 'Title is required']"
-            class="mb-3"
-          />
+          <v-text-field v-model="form.title" label="Session Title" placeholder="e.g. Introduction to Machine Learning" prepend-inner-icon="mdi-text" :rules="[r => !!r || 'Title is required']" class="mb-3" />
 
-          <v-select
-            v-model="form.courseId"
-            label="Course"
-            prepend-inner-icon="mdi-book-open"
-            :items="courses"
-            item-title="name"
-            item-value="id"
-            :rules="[r => !!r || 'Course is required']"
-            class="mb-3"
-          />
+          <v-select v-model="form.courseId" label="Course" prepend-inner-icon="mdi-book-open" :items="courses" item-title="name" item-value="id" :rules="[r => !!r || 'Course is required']" class="mb-3" />
 
           <v-row class="mb-1">
             <v-col cols="6">
-              <v-select
-                v-model="form.sourceLanguage"
-                label="Source Language"
-                prepend-inner-icon="mdi-microphone"
-                :items="languageItems"
-                :rules="[r => !!r || 'Required']"
-              />
+              <v-select v-model="form.sourceLanguage" label="Source Language" prepend-inner-icon="mdi-microphone" :items="languageItems" :rules="[r => !!r || 'Required']" />
             </v-col>
             <v-col cols="6">
-              <v-select
-                v-model="form.targetLanguages"
-                label="Target Languages"
-                prepend-inner-icon="mdi-translate"
-                :items="targetLangItems"
-                multiple
-                chips
-                :rules="[r => r.length > 0 || 'Select at least one']"
-              />
+              <v-select v-model="form.targetLanguages" label="Target Languages" prepend-inner-icon="mdi-translate" :items="targetLangItems" multiple chips :rules="[r => r.length > 0 || 'Select at least one']" />
             </v-col>
           </v-row>
 
-          <v-select
-            v-model="form.accessMode"
-            label="Access Mode"
-            prepend-inner-icon="mdi-shield-account"
-            :items="accessModes"
-            class="mb-3"
-          />
+          <v-select v-model="form.accessMode" label="Access Mode" prepend-inner-icon="mdi-shield-account" :items="accessModes" class="mb-3" />
 
-          <v-text-field
-            v-model.number="form.maxParticipants"
-            label="Max Participants"
-            type="number"
-            prepend-inner-icon="mdi-account-group"
-            min="1"
-            max="1000"
-            class="mb-3"
-          />
+          <v-text-field v-model.number="form.maxParticipants" label="Max Participants" type="number" prepend-inner-icon="mdi-account-group" min="1" max="1000" class="mb-3" />
 
           <v-divider class="mb-4" />
 
           <div class="d-flex flex-column gap-1">
-            <v-switch
-              v-model="form.recordingEnabled"
-              label="Enable audio recording (server-side)"
-              color="primary"
-              density="compact"
-              hide-details
-            />
-            <v-switch
-              v-model="form.studentTranscriptDownloadEnabled"
-              label="Allow students to download transcript"
-              color="primary"
-              density="compact"
-              hide-details
-            />
+            <v-switch v-model="form.recordingEnabled" label="Enable audio recording (server-side)" color="primary" density="compact" hide-details />
+            <v-switch v-model="form.studentTranscriptDownloadEnabled" label="Allow students to download transcript" color="primary" density="compact" hide-details />
           </div>
         </v-form>
       </v-card-text>
@@ -98,33 +42,28 @@
       <v-card-actions class="px-6 py-4 gap-2">
         <v-spacer />
         <v-btn variant="text" @click="model = false">Cancel</v-btn>
-        <v-btn color="primary" variant="flat" prepend-icon="mdi-check" :loading="saving" @click="submit">
-          Create Session
-        </v-btn>
+        <v-btn color="primary" variant="flat" prepend-icon="mdi-check" :loading="saving" @click="submit">Create Session</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed } from 'vue'
-import type { Language, AccessMode } from '../../types'
+import { useSessionStore } from '../../stores/session.js'
 
-const model = defineModel<boolean>()
-const emit = defineEmits<{ created: [id: string] }>()
-
-import { useSessionStore } from '../../stores/session'
+const model = defineModel()
+const emit = defineEmits(['created'])
 const sessionStore = useSessionStore()
-
 const formRef = ref()
 const saving = ref(false)
 
 const form = ref({
   title: '',
   courseId: 'cs401',
-  sourceLanguage: 'IT' as Language,
-  targetLanguages: ['EN', 'SQ'] as Language[],
-  accessMode: 'OPEN' as AccessMode,
+  sourceLanguage: 'IT',
+  targetLanguages: ['EN', 'SQ'],
+  accessMode: 'OPEN',
   maxParticipants: 300,
   recordingEnabled: false,
   studentTranscriptDownloadEnabled: true,
@@ -143,9 +82,7 @@ const languageItems = [
   { title: '🇦🇱 Albanian', value: 'SQ' },
 ]
 
-const targetLangItems = computed(() =>
-  languageItems.filter(l => l.value !== form.value.sourceLanguage)
-)
+const targetLangItems = computed(() => languageItems.filter(l => l.value !== form.value.sourceLanguage))
 
 const accessModes = [
   { title: '🔓 Open — anyone with QR/link', value: 'OPEN' },
