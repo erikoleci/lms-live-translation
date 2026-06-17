@@ -1,18 +1,18 @@
 <template>
-  <v-container fluid class="pa-6">
-    <div class="d-flex align-center flex-wrap gap-3 mb-6">
-      <div>
-        <h1 class="text-h5 font-weight-bold">Usage Statistics</h1>
+  <v-container fluid class="pa-3 pa-sm-4 pa-md-6">
+    <div class="d-flex align-start flex-wrap gap-3 mb-4 mb-sm-6">
+      <div class="flex-grow-1">
+        <h1 class="text-h6 text-sm-h5 font-weight-bold">Usage Statistics</h1>
         <p class="text-body-2 text-medium-emphasis">Hours spoken per class and workspace — monthly breakdown</p>
       </div>
-      <v-spacer />
-      <div class="d-flex gap-2 align-center">
+      <div class="d-flex flex-wrap gap-2 align-center w-100 w-sm-auto">
         <v-select
           v-model="selectedWorkspaceId"
           :items="workspaceItems"
           label="Workspace"
           density="compact"
-          style="min-width:180px"
+          class="flex-grow-1"
+          style="min-width:140px; max-width:220px"
           hide-details
           prepend-inner-icon="mdi-domain"
         />
@@ -21,7 +21,8 @@
           :items="monthItems"
           label="Month"
           density="compact"
-          style="min-width:160px"
+          class="flex-grow-1"
+          style="min-width:130px; max-width:200px"
           hide-details
           prepend-inner-icon="mdi-calendar-month"
         />
@@ -29,7 +30,7 @@
     </div>
 
     <!-- KPI row -->
-    <v-row class="mb-6">
+    <v-row class="mb-4 mb-sm-6">
       <v-col v-for="kpi in kpis" :key="kpi.label" cols="6" sm="3">
         <v-card rounded="xl" elevation="0" border class="pa-4 text-center">
           <v-icon :color="kpi.color" size="28" class="mb-1">{{ kpi.icon }}</v-icon>
@@ -40,13 +41,13 @@
     </v-row>
 
     <!-- Classes table -->
-    <v-card rounded="xl" elevation="0" border class="mb-6">
+    <v-card rounded="xl" elevation="0" border class="mb-4 mb-sm-6">
       <v-card-title class="text-body-1 font-weight-bold pt-4 px-4">
         <v-icon start color="primary">mdi-google-classroom</v-icon>
         Classes — {{ selectedMonthLabel }}
       </v-card-title>
-      <v-card-text class="px-0 pb-0">
-        <v-table>
+      <v-card-text class="px-0 pb-0" style="overflow-x:auto">
+        <v-table style="min-width:560px">
           <thead>
             <tr>
               <th class="text-left pl-6">Class</th>

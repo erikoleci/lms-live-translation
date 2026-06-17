@@ -41,7 +41,7 @@
       <v-divider />
       <v-card-actions class="px-6 py-4 gap-2">
         <v-spacer />
-        <v-btn variant="text" @click="model = false">Cancel</v-btn>
+        <v-btn variant="text" @click="() => { model = false; resetForm() }">Cancel</v-btn>
         <v-btn color="primary" variant="flat" prepend-icon="mdi-check" :loading="saving" @click="submit">Create Session</v-btn>
       </v-card-actions>
     </v-card>
@@ -89,6 +89,20 @@ const accessModes = [
   { title: '🔒 Closed — authenticated users only', value: 'CLOSED' },
 ]
 
+function resetForm() {
+  form.value = {
+    title: '',
+    courseId: 'cs401',
+    sourceLanguage: 'IT',
+    targetLanguages: ['EN', 'SQ'],
+    accessMode: 'OPEN',
+    maxParticipants: 300,
+    recordingEnabled: false,
+    studentTranscriptDownloadEnabled: true,
+  }
+  formRef.value?.resetValidation()
+}
+
 async function submit() {
   const { valid } = await formRef.value.validate()
   if (!valid) return
@@ -97,6 +111,7 @@ async function submit() {
   const session = sessionStore.createSession(form.value)
   saving.value = false
   model.value = false
+  resetForm()
   emit('created', session.id)
 }
 </script>

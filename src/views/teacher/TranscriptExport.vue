@@ -1,15 +1,18 @@
 <template>
-  <v-container class="pa-6" max-width="900">
-    <div class="d-flex align-center mb-6">
-      <v-btn icon="mdi-arrow-left" variant="text" size="small" to="/teacher" class="mr-2" />
-      <div>
+  <v-container class="pa-3 pa-sm-4 pa-md-6" max-width="900">
+    <div class="d-flex align-center flex-wrap gap-3 mb-4 mb-sm-6">
+      <v-btn icon="mdi-arrow-left" variant="text" size="small" to="/teacher" class="mr-1" />
+      <div class="flex-grow-1">
         <h1 class="text-h6 font-weight-bold">Session Transcript</h1>
         <p v-if="session" class="text-body-2 text-medium-emphasis">{{ session.title }}</p>
       </div>
-      <v-spacer />
-      <div class="d-flex gap-2">
-        <v-btn variant="tonal" prepend-icon="mdi-download" rounded="lg" @click="exportTxt">Export .txt</v-btn>
-        <v-btn color="primary" variant="flat" prepend-icon="mdi-file-pdf-box" rounded="lg" @click="exportPdf">Export PDF</v-btn>
+      <div class="d-flex gap-2 flex-wrap">
+        <v-btn variant="tonal" prepend-icon="mdi-download" rounded="lg" size="small" @click="exportTxt">
+          <span class="d-none d-sm-inline">Export </span>.txt
+        </v-btn>
+        <v-btn color="primary" variant="flat" prepend-icon="mdi-file-pdf-box" rounded="lg" size="small" @click="exportPdf">
+          <span class="d-none d-sm-inline">Export </span>PDF
+        </v-btn>
       </div>
     </div>
 

@@ -1,24 +1,34 @@
 <template>
   <div class="session-controls">
-    <div class="d-flex gap-2 flex-wrap align-center">
-      <v-btn v-if="status === 'WAITING' || status === 'CREATED'" color="success" size="large" prepend-icon="mdi-broadcast" :loading="loading" @click="emit('start')">
-        Start Session
-      </v-btn>
-      <v-btn v-if="status === 'ACTIVE'" color="warning" size="large" prepend-icon="mdi-pause" :loading="loading" @click="emit('pause')">
-        Pause
-      </v-btn>
-      <v-btn v-if="status === 'PAUSED'" color="success" size="large" prepend-icon="mdi-play" :loading="loading" @click="emit('resume')">
-        Resume
-      </v-btn>
-      <v-btn v-if="status === 'ACTIVE' || status === 'PAUSED'" color="error" size="large" variant="tonal" prepend-icon="mdi-stop" :loading="loading" @click="confirmEnd = true">
-        End Session
-      </v-btn>
-      <template v-if="status === 'ACTIVE'">
-        <v-divider vertical class="mx-2" />
-        <v-btn :color="micActive ? (muted ? 'warning' : 'success') : 'grey'" :variant="micActive ? 'flat' : 'tonal'" size="large" :prepend-icon="muted ? 'mdi-microphone-off' : 'mdi-microphone'" @click="emit('toggleMic')">
-          {{ !micActive ? 'Start Mic' : muted ? 'Unmute' : 'Mute' }}
-        </v-btn>
-      </template>
+    <div class="d-flex flex-column gap-2">
+      <v-btn
+        v-if="status === 'WAITING' || status === 'CREATED'"
+        color="success" variant="flat" block prepend-icon="mdi-broadcast"
+        :loading="loading" @click="emit('start')"
+      >Start Session</v-btn>
+
+      <div v-if="status === 'ACTIVE' || status === 'PAUSED'" class="d-flex gap-2">
+        <v-btn
+          v-if="status === 'ACTIVE'"
+          color="warning" variant="flat" class="flex-grow-1"
+          prepend-icon="mdi-pause" :loading="loading" @click="emit('pause')"
+        >Pause</v-btn>
+        <v-btn
+          v-if="status === 'PAUSED'"
+          color="success" variant="flat" class="flex-grow-1"
+          prepend-icon="mdi-play" :loading="loading" @click="emit('resume')"
+        >Resume</v-btn>
+        <v-btn
+          color="error" variant="tonal" class="flex-grow-1"
+          prepend-icon="mdi-stop" :loading="loading" @click="confirmEnd = true"
+        >End</v-btn>
+      </div>
+
+      <v-chip
+        v-if="status === 'ENDED'"
+        color="default" variant="tonal" block
+        prepend-icon="mdi-check-circle" class="justify-center"
+      >Session Ended</v-chip>
     </div>
 
     <v-dialog v-model="confirmEnd" max-width="400">

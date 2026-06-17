@@ -78,7 +78,7 @@
                 :color="sessionStore.isMuted ? 'warning-lighten-4' : 'grey-lighten-3'"
               >
                 <v-icon size="28" :color="sessionStore.isMuted ? 'warning' : 'grey'">
-                  {{ sessionStore.isMuted ? 'mdi-microphone-off' : 'mdi-microphone-off' }}
+                  {{ sessionStore.isMuted ? 'mdi-microphone-off' : 'mdi-microphone' }}
                 </v-icon>
               </v-avatar>
             </div>
@@ -259,7 +259,7 @@
       </v-toolbar>
 
       <v-card-text v-if="!qrMinimized" class="d-flex flex-column align-center pa-4 gap-3">
-        <v-sheet rounded="lg" border class="pa-2 bg-white">
+        <v-sheet ref="qrSheetRef" rounded="lg" border class="pa-2 bg-white">
           <qrcode-vue :value="joinUrl" :size="180" level="H" :margin="2" />
         </v-sheet>
         <v-chip color="primary" variant="flat" size="large" class="font-weight-bold" style="letter-spacing:4px;font-size:16px">
@@ -318,7 +318,8 @@ const sidebarOpen = ref(true)
 
 const qrFloat = ref(true)
 const qrMinimized = ref(false)
-const qrPos = ref({ x: window.innerWidth - 290, y: 80 })
+const qrPos = ref({ x: Math.max(0, window.innerWidth - 290), y: 80 })
+const qrSheetRef = ref(null)
 const snack = ref({ show: false, text: '', color: 'success' })
 
 const isLive = computed(() => session.value?.status === 'ACTIVE' && sessionStore.micActive && !sessionStore.isMuted)
@@ -345,7 +346,7 @@ function endTouchDrag() { window.removeEventListener('touchmove', onTouchDrag); 
 
 async function copyLink() { await navigator.clipboard.writeText(joinUrl.value); snack.value = { show: true, text: 'Link copied!', color: 'success' } }
 function downloadQr() {
-  const canvas = document.querySelector('.qr-float-window canvas') ?? document.querySelector('[data-qr] canvas')
+  const canvas = qrSheetRef.value?.$el?.querySelector('canvas')
   if (!canvas) return
   const a = document.createElement('a'); a.download = `join-${session.value?.joinCode}.png`; a.href = canvas.toDataURL(); a.click()
 }

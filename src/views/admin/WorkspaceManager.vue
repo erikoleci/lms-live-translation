@@ -1,13 +1,12 @@
 <template>
-  <v-container fluid class="pa-6">
-    <div class="d-flex align-center mb-6">
-      <div>
-        <h1 class="text-h5 font-weight-bold">Workspaces &amp; Classes</h1>
+  <v-container fluid class="pa-3 pa-sm-4 pa-md-6">
+    <div class="d-flex align-center flex-wrap gap-3 mb-4 mb-sm-6">
+      <div class="flex-grow-1">
+        <h1 class="text-h6 text-sm-h5 font-weight-bold">Workspaces &amp; Classes</h1>
         <p class="text-body-2 text-medium-emphasis">Manage schools, institutes, and their classes</p>
       </div>
-      <v-spacer />
       <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" rounded="lg" @click="showCreateWs = true">
-        New Workspace
+        <span class="d-none d-sm-inline">New </span>Workspace
       </v-btn>
     </div>
 

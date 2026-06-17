@@ -1,16 +1,17 @@
 <template>
-  <v-container fluid class="pa-6">
-    <div class="d-flex align-center mb-6">
-      <v-btn icon="mdi-arrow-left" variant="text" size="small" to="/admin" class="mr-2" />
-      <div>
-        <h1 class="text-h5 font-weight-bold">Provider Configuration</h1>
+  <v-container fluid class="pa-3 pa-sm-4 pa-md-6">
+    <div class="d-flex align-center flex-wrap gap-3 mb-4 mb-sm-6">
+      <v-btn icon="mdi-arrow-left" variant="text" size="small" to="/admin" class="mr-1" />
+      <div class="flex-grow-1">
+        <h1 class="text-h6 text-sm-h5 font-weight-bold">Provider Configuration</h1>
         <p class="text-body-2 text-medium-emphasis">Manage STT, Translation, and TTS providers</p>
       </div>
-      <v-spacer />
-      <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" rounded="lg">Add Provider</v-btn>
+      <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" rounded="lg">
+        <span class="d-none d-sm-inline">Add </span>Provider
+      </v-btn>
     </div>
 
-    <v-tabs v-model="activeType" color="primary" class="mb-6">
+    <v-tabs v-model="activeType" color="primary" class="mb-4 mb-sm-6" show-arrows>
       <v-tab value="ALL">
         <v-icon start>mdi-view-grid</v-icon> All
         <v-chip size="x-small" class="ml-2" variant="tonal">{{ providerStore.providers.length }}</v-chip>
