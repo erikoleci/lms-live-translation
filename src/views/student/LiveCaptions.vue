@@ -1,5 +1,7 @@
 <template>
   <div class="captions-page" :class="{ 'captions-page--dark': uiStore.darkMode }">
+
+    <!-- TOP BAR -->
     <div class="captions-topbar">
       <div class="d-flex align-center gap-2 flex-grow-1 min-w-0">
         <v-icon size="20" :color="uiStore.darkMode ? 'white' : 'primary'">mdi-translate</v-icon>
@@ -13,20 +15,21 @@
       </div>
 
       <div class="d-flex align-center gap-2">
-        <v-menu>
-          <template #activator="{ props }">
-            <v-btn v-bind="props" variant="tonal" size="small" rounded="lg">
-              <LanguageBadge :lang="selectedLanguage" />
-              <v-icon end>mdi-chevron-down</v-icon>
-            </v-btn>
-          </template>
-          <v-list rounded="xl" elevation="4">
-            <v-list-item v-for="lang in availableLangs" :key="lang.value" @click="selectedLanguage = lang.value" :active="selectedLanguage === lang.value" active-color="primary" rounded="lg">
-              <template #prepend><span class="mr-2" style="font-size: 18px">{{ lang.flag }}</span></template>
-              {{ lang.label }}
-            </v-list-item>
-          </v-list>
-        </v-menu>
+        <!-- Language quick-switch -->
+        <div class="lang-switch-row">
+          <button
+            v-for="lang in availableLangs"
+            :key="lang.value"
+            class="lang-btn-sm"
+            :class="{ 'lang-btn-sm--active': selectedLanguage === lang.value }"
+            @click="selectedLanguage = lang.value"
+          >
+            <span>{{ lang.flag }}</span>
+            <span class="lang-btn-sm__label">{{ lang.shortLabel }}</span>
+          </button>
+        </div>
+
+        <v-divider vertical style="height:28px" />
 
         <v-btn :icon="showSettings ? 'mdi-close' : 'mdi-tune'" variant="tonal" size="small" @click="showSettings = !showSettings" />
         <v-btn :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'" variant="tonal" size="small" @click="uiStore.toggleDarkMode()" />
@@ -34,14 +37,16 @@
       </div>
     </div>
 
+    <!-- BODY -->
     <div class="captions-body">
+      <!-- Settings panel -->
       <transition name="slide-x">
         <aside v-if="showSettings" class="settings-panel">
           <div class="pa-4 d-flex flex-column gap-4">
             <v-card rounded="xl" elevation="0" border>
               <v-card-title class="text-body-2 font-weight-bold pt-3 px-4">
                 <v-icon start size="16" color="primary">mdi-translate</v-icon>
-                Language
+                Display Language
               </v-card-title>
               <v-card-text class="px-4 pb-4">
                 <LanguageSelector v-model="selectedLanguage" />
@@ -56,10 +61,8 @@
               </v-card-title>
               <v-card-text class="px-4 pb-4">
                 <v-slider :model-value="uiStore.captionFontSize" min="12" max="36" step="2" color="primary" track-color="grey-lighten-2" thumb-label @update:model-value="uiStore.setCaptionFontSize($event)" />
-                <div class="d-flex gap-2">
-                  <v-btn v-for="size in [14, 18, 24, 32]" :key="size" size="small" :variant="uiStore.captionFontSize === size ? 'flat' : 'outlined'" :color="uiStore.captionFontSize === size ? 'primary' : 'default'" @click="uiStore.setCaptionFontSize(size)">
-                    {{ size }}px
-                  </v-btn>
+                <div class="d-flex gap-2 flex-wrap">
+                  <v-btn v-for="size in [14, 18, 24, 32]" :key="size" size="small" :variant="uiStore.captionFontSize === size ? 'flat' : 'outlined'" :color="uiStore.captionFontSize === size ? 'primary' : 'default'" @click="uiStore.setCaptionFontSize(size)">{{ size }}px</v-btn>
                 </div>
               </v-card-text>
             </v-card>
@@ -85,6 +88,7 @@
         </aside>
       </transition>
 
+      <!-- Caption main area -->
       <main class="caption-main">
         <CaptionStream
           :segments="segments"
@@ -96,6 +100,7 @@
       </main>
     </div>
 
+    <!-- Audio on indicator -->
     <div v-if="audioEnabled" class="audio-indicator">
       <v-icon size="14" color="white">mdi-volume-high</v-icon>
       <span class="text-caption text-white ml-1">Audio ON · AI-generated</span>
@@ -137,9 +142,9 @@ const selectedVoice = ref('en-US-alloy')
 const wsStatus = ref('CONNECTED')
 
 const availableLangs = [
-  { value: 'IT', label: 'Italian', flag: '🇮🇹' },
-  { value: 'EN', label: 'English', flag: '🇬🇧' },
-  { value: 'SQ', label: 'Albanian', flag: '🇦🇱' },
+  { value: 'IT', shortLabel: 'ITA', flag: '🇮🇹' },
+  { value: 'EN', shortLabel: 'ENG', flag: '🇬🇧' },
+  { value: 'SQ', shortLabel: 'SHQ', flag: '🇦🇱' },
 ]
 
 const availableVoices = computed(() =>
@@ -168,10 +173,21 @@ onUnmounted(() => {
 <style scoped>
 .captions-page { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #F5F7FA; transition: background 0.3s; }
 .captions-page--dark { background: #12121F; color: white; }
-.captions-topbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: white; border-bottom: 1px solid rgba(0,0,0,0.08); min-height: 60px; }
+
+.captions-topbar { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: white; border-bottom: 1px solid rgba(0,0,0,0.08); min-height: 58px; }
 .captions-page--dark .captions-topbar { background: #1E1E2E; border-bottom-color: rgba(255,255,255,0.08); }
+
+/* Quick language switcher in topbar */
+.lang-switch-row { display: flex; gap: 4px; background: rgba(0,0,0,0.05); border-radius: 10px; padding: 3px; }
+.captions-page--dark .lang-switch-row { background: rgba(255,255,255,0.08); }
+.lang-btn-sm { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 7px; border: none; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600; background: transparent; color: #666; transition: all 0.15s; }
+.lang-btn-sm:hover { background: rgba(0,0,0,0.06); }
+.lang-btn-sm--active { background: white; color: #1565C0; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+.captions-page--dark .lang-btn-sm--active { background: #2a2a3e; color: #42A5F5; }
+.lang-btn-sm__label { font-size: 11px; }
+
 .captions-body { flex: 1; display: flex; overflow: hidden; }
-.settings-panel { width: 320px; min-width: 280px; border-right: 1px solid rgba(0,0,0,0.08); overflow-y: auto; background: white; }
+.settings-panel { width: 300px; min-width: 280px; border-right: 1px solid rgba(0,0,0,0.08); overflow-y: auto; background: white; }
 .captions-page--dark .settings-panel { background: #1E1E2E; border-right-color: rgba(255,255,255,0.08); }
 .caption-main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 .participant-row { display: flex; align-items: center; padding: 4px 0; }

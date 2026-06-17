@@ -12,7 +12,7 @@ const router = createRouter({
     {
       path: '/teacher/session/:id',
       component: () => import('../views/teacher/ActiveSession.vue'),
-      meta: { role: 'teacher', title: 'Active Session' },
+      meta: { role: 'teacher', title: 'Active Session', fullscreen: true },
     },
     {
       path: '/teacher/session/:id/transcript',
@@ -32,12 +32,22 @@ const router = createRouter({
     {
       path: '/student/session/:id',
       component: () => import('../views/student/LiveCaptions.vue'),
-      meta: { role: 'student', title: 'Live Captions' },
+      meta: { role: 'student', title: 'Live Captions', fullscreen: true },
     },
     {
       path: '/admin',
       component: () => import('../views/admin/AdminDashboard.vue'),
       meta: { role: 'admin', title: 'Admin Dashboard' },
+    },
+    {
+      path: '/admin/workspaces',
+      component: () => import('../views/admin/WorkspaceManager.vue'),
+      meta: { role: 'admin', title: 'Workspaces & Classes' },
+    },
+    {
+      path: '/admin/stats',
+      component: () => import('../views/admin/UsageStats.vue'),
+      meta: { role: 'admin', title: 'Usage Statistics' },
     },
     {
       path: '/admin/providers',
