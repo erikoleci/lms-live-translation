@@ -6,7 +6,7 @@
     </v-card-title>
     <v-card-text class="px-4 pb-4">
       <v-switch
-        v-model="audioEnabled"
+        :model-value="audioEnabled"
         :color="audioEnabled ? 'success' : 'grey'"
         :label="audioEnabled ? 'Translated audio: ON' : 'Translated audio: OFF'"
         density="comfortable"
