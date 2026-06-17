@@ -12,8 +12,8 @@
       </v-btn>
     </div>
 
-    <!-- Workspace / Class filter bar -->
-    <v-card rounded="xl" elevation="0" border class="mb-4 mb-sm-5">
+    <!-- Workspace / Class filter bar — only shown when workspaces exist -->
+    <v-card v-if="workspaceStore.workspaces.length" rounded="xl" elevation="0" border class="mb-4 mb-sm-5">
       <div class="d-flex align-start flex-wrap gap-2 pa-3 pa-sm-4">
         <!-- Workspace group -->
         <div class="d-flex align-center gap-2 flex-grow-1 min-w-0">
@@ -32,10 +32,10 @@
           </div>
         </div>
 
-        <v-divider class="my-1 mx-1 d-none d-sm-block" vertical style="max-height:28px; align-self:center" />
+        <v-divider v-if="activeWorkspaceClasses.length" class="my-1 mx-1 d-none d-sm-block" vertical style="max-height:28px; align-self:center" />
 
-        <!-- Class group -->
-        <div class="d-flex align-center gap-2 flex-grow-1 min-w-0">
+        <!-- Class group — only shown when workspace has classes -->
+        <div v-if="activeWorkspaceClasses.length" class="d-flex align-center gap-2 flex-grow-1 min-w-0">
           <div class="d-flex align-center gap-1 text-caption font-weight-bold text-medium-emphasis" style="white-space:nowrap">
             <v-icon color="teal" size="16">mdi-google-classroom</v-icon>
             Class
@@ -135,7 +135,7 @@ const filteredSessions = computed(() => {
   if (workspaceStore.activeClassId) s = s.filter(sess => sess.classId === workspaceStore.activeClassId)
   return s
 })
-const activeSessions = computed(() => filteredSessions.value.filter(s => ['ACTIVE','PAUSED','WAITING'].includes(s.status)))
+const activeSessions = computed(() => filteredSessions.value.filter(s => ['CREATED','WAITING','ACTIVE','PAUSED'].includes(s.status)))
 const endedSessions = computed(() => filteredSessions.value.filter(s => ['ENDED','EXPIRED'].includes(s.status)))
 
 const stats = computed(() => [

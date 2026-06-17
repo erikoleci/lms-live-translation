@@ -19,9 +19,6 @@
             <v-avatar :color="`${kpi.color}-lighten-4`" size="36" rounded="lg">
               <v-icon :color="kpi.color" size="18">{{ kpi.icon }}</v-icon>
             </v-avatar>
-            <v-chip size="x-small" :color="kpi.trend > 0 ? 'success' : 'error'" variant="tonal">
-              {{ kpi.trend > 0 ? '+' : '' }}{{ kpi.trend }}%
-            </v-chip>
           </div>
           <p class="text-h5 font-weight-bold mb-0">{{ kpi.value }}</p>
           <p class="text-caption text-medium-emphasis">{{ kpi.label }}</p>
@@ -43,12 +40,15 @@
             Provider Health
           </v-card-title>
           <v-card-text class="px-4 pb-2">
-            <v-list density="compact" nav class="pa-0">
+            <div v-if="!providerStore.providers.length" class="text-center py-8">
+              <v-icon size="40" color="grey-lighten-2">mdi-server-off</v-icon>
+              <p class="text-caption text-disabled mt-2">No providers configured yet.</p>
+              <v-btn size="small" variant="tonal" to="/admin/providers" class="mt-2" rounded="lg">Configure</v-btn>
+            </div>
+            <v-list v-else density="compact" nav class="pa-0">
               <v-list-item
                 v-for="p in providerStore.providers" :key="p.id"
-                :border="true"
-                rounded="lg"
-                class="mb-1 px-2"
+                :border="true" rounded="lg" class="mb-1 px-2"
               >
                 <template #prepend>
                   <v-icon size="14" :color="p.enabled ? 'success' : 'grey'" class="mr-2">
@@ -65,7 +65,7 @@
               </v-list-item>
             </v-list>
           </v-card-text>
-          <v-card-actions class="px-4 pb-4 pt-0">
+          <v-card-actions v-if="providerStore.providers.length" class="px-4 pb-4 pt-0">
             <v-btn variant="tonal" size="small" to="/admin/providers" prepend-icon="mdi-cog" block rounded="lg">Configure</v-btn>
           </v-card-actions>
         </v-card>
@@ -82,10 +82,7 @@
           </v-card-title>
           <v-card-text class="px-4 pb-3">
             <v-list density="compact" nav class="pa-0">
-              <v-list-item
-                v-for="lang in languages" :key="lang.code"
-                class="px-0"
-              >
+              <v-list-item v-for="lang in languages" :key="lang.code" class="px-0">
                 <template #prepend>
                   <span style="font-size:22px; line-height:1" class="mr-3">{{ lang.flag }}</span>
                 </template>
@@ -113,10 +110,7 @@
           </v-card-title>
           <v-card-text class="px-4 pb-3">
             <v-list density="compact" nav class="pa-0">
-              <v-list-item
-                v-for="policy in policies" :key="policy.label"
-                class="px-0"
-              >
+              <v-list-item v-for="policy in policies" :key="policy.label" class="px-0">
                 <v-list-item-title class="text-body-2 font-weight-bold">{{ policy.label }}</v-list-item-title>
                 <v-list-item-subtitle class="text-caption">{{ policy.description }}</v-list-item-subtitle>
                 <template #append>
@@ -133,17 +127,37 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useProviderStore } from '../../stores/provider.js'
+import { useSessionStore } from '../../stores/session.js'
 import UsageChart from '../../components/admin/UsageChart.vue'
 
 const providerStore = useProviderStore()
+const sessionStore = useSessionStore()
 
-const kpis = [
-  { label: 'Active Sessions', value: 2, icon: 'mdi-broadcast', color: 'success', trend: 14 },
-  { label: 'Participants', value: 79, icon: 'mdi-account-group', color: 'blue', trend: 22 },
-  { label: 'STT Minutes', value: '142', icon: 'mdi-microphone', color: 'purple', trend: -5 },
-  { label: 'Cost Today', value: '$1.84', icon: 'mdi-currency-usd', color: 'orange', trend: 8 },
-]
+const kpis = computed(() => [
+  {
+    label: 'Active Sessions',
+    value: sessionStore.sessions.filter(s => s.status === 'ACTIVE').length,
+    icon: 'mdi-broadcast', color: 'success',
+  },
+  {
+    label: 'Total Participants',
+    value: sessionStore.sessions.reduce((a, s) => a + s.participantCount, 0),
+    icon: 'mdi-account-group', color: 'blue',
+  },
+  {
+    label: 'Total Sessions',
+    value: sessionStore.sessions.length,
+    icon: 'mdi-video-wireless', color: 'purple',
+  },
+  {
+    label: 'Providers',
+    value: providerStore.providers.filter(p => p.enabled).length + ' / ' + providerStore.providers.length,
+    icon: 'mdi-server-network', color: 'orange',
+  },
+])
+
 const languages = [
   { code: 'IT', name: 'Italian', flag: '🇮🇹' },
   { code: 'EN', name: 'English', flag: '🇬🇧' },
