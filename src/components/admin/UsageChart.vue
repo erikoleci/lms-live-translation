@@ -5,25 +5,36 @@
       Usage — Last 7 Days
     </v-card-title>
     <v-card-text class="px-4 pb-4">
-      <div class="chart-container">
-        <div class="chart-bars">
-          <div v-for="(stat, i) in stats" :key="i" class="chart-col">
-            <div class="bar-stack">
-              <div class="bar bar--stt" :style="{ height: `${(stat.sttMinutes / maxStt) * 120}px` }" :title="`STT: ${stat.sttMinutes} min`" />
-            </div>
-            <span class="bar-label">{{ shortDate(stat.date) }}</span>
-          </div>
+
+      <!-- Bar chart using flex + inline styles for dynamic heights only -->
+      <v-sheet class="d-flex align-end gap-2 pa-2 rounded-lg" style="height:148px" color="grey-lighten-5">
+        <div
+          v-for="(stat, i) in stats" :key="i"
+          class="d-flex flex-column align-center gap-1 flex-grow-1"
+          style="height:100%"
+        >
+          <v-tooltip :text="`${shortDate(stat.date)}: ${stat.sttMinutes} min`">
+            <template #activator="{ props: tip }">
+              <div
+                v-bind="tip"
+                class="w-100 rounded-t align-self-end"
+                style="background:linear-gradient(180deg, #42A5F5, #1565C0); min-height:4px; transition:height 0.5s ease"
+                :style="`height:${(stat.sttMinutes / maxStt) * 120}px`"
+              />
+            </template>
+          </v-tooltip>
+          <span class="text-caption text-medium-emphasis" style="font-size:11px">{{ shortDate(stat.date) }}</span>
         </div>
-      </div>
+      </v-sheet>
 
       <v-divider class="my-4" />
 
       <v-row>
-        <v-col cols="6" sm="3" v-for="metric in summaryMetrics" :key="metric.label">
-          <div class="metric-box">
-            <p class="text-h6 font-weight-bold">{{ metric.value }}</p>
+        <v-col v-for="metric in summaryMetrics" :key="metric.label" cols="6" sm="3">
+          <v-sheet color="grey-lighten-5" rounded="lg" class="pa-3 text-center">
+            <p class="text-h6 font-weight-bold mb-0">{{ metric.value }}</p>
             <p class="text-caption text-medium-emphasis">{{ metric.label }}</p>
-          </div>
+          </v-sheet>
         </v-col>
       </v-row>
     </v-card-text>
@@ -52,18 +63,5 @@ const summaryMetrics = computed(() => {
   ]
 })
 
-function shortDate(d) {
-  return new Date(d).toLocaleDateString([], { weekday: 'short' })
-}
+function shortDate(d) { return new Date(d).toLocaleDateString([], { weekday: 'short' }) }
 </script>
-
-<style scoped>
-.chart-container { padding: 8px 0; }
-.chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 140px; }
-.chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.bar-stack { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; width: 100%; }
-.bar { width: 100%; border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.5s ease; }
-.bar--stt { background: linear-gradient(180deg, #42A5F5, #1565C0); }
-.bar-label { font-size: 11px; color: #888; font-weight: 500; }
-.metric-box { padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.03); text-align: center; }
-</style>

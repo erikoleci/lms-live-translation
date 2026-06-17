@@ -9,46 +9,31 @@
         :model-value="audioEnabled"
         :color="audioEnabled ? 'success' : 'grey'"
         :label="audioEnabled ? 'Translated audio: ON' : 'Translated audio: OFF'"
-        density="comfortable"
-        hide-details
-        class="mb-3"
+        density="comfortable" hide-details class="mb-3"
         @update:model-value="v => emit('update:audioEnabled', v)"
       />
-      <div class="ai-disclosure mb-4">
-        <v-icon size="14" color="orange" class="mr-1">mdi-robot</v-icon>
+
+      <v-sheet color="orange-lighten-5" rounded="lg" class="d-flex align-center gap-2 pa-2 mb-4">
+        <v-icon size="14" color="orange">mdi-robot</v-icon>
         <span class="text-caption text-medium-emphasis">Audio is AI-generated. Voice may not reflect a real person.</span>
-      </div>
+      </v-sheet>
+
       <p class="text-caption text-medium-emphasis font-weight-bold text-uppercase mb-2">Select Voice</p>
-      <div class="voice-grid">
+      <div class="d-flex flex-wrap gap-2">
         <v-btn
-          v-for="voice in voices"
-          :key="voice.code"
+          v-for="voice in voices" :key="voice.code"
+          size="small" rounded="lg"
           :variant="selectedVoice === voice.code ? 'flat' : 'outlined'"
           :color="selectedVoice === voice.code ? 'primary' : 'default'"
-          size="small"
-          rounded="lg"
-          class="voice-btn"
+          :prepend-icon="voice.gender === 'FEMALE' ? 'mdi-gender-female' : voice.gender === 'MALE' ? 'mdi-gender-male' : 'mdi-gender-non-binary'"
           @click="emit('update:selectedVoice', voice.code)"
-        >
-          <v-icon start size="14">{{ voice.gender === 'FEMALE' ? 'mdi-gender-female' : voice.gender === 'MALE' ? 'mdi-gender-male' : 'mdi-gender-non-binary' }}</v-icon>
-          {{ voice.name }}
-        </v-btn>
+        >{{ voice.name }}</v-btn>
       </div>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup>
-defineProps({
-  audioEnabled: Boolean,
-  selectedVoice: String,
-  voices: Array,
-})
-
+defineProps({ audioEnabled: Boolean, selectedVoice: String, voices: Array })
 const emit = defineEmits(['update:audioEnabled', 'update:selectedVoice'])
 </script>
-
-<style scoped>
-.ai-disclosure { display: flex; align-items: center; padding: 8px 10px; background: rgba(255,152,0,0.08); border-radius: 8px; border: 1px solid rgba(255,152,0,0.2); }
-.voice-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-</style>

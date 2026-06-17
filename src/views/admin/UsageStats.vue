@@ -1,6 +1,6 @@
 <template>
   <v-container fluid class="pa-6">
-    <div class="d-flex align-center mb-6">
+    <div class="d-flex align-center flex-wrap gap-3 mb-6">
       <div>
         <h1 class="text-h5 font-weight-bold">Usage Statistics</h1>
         <p class="text-body-2 text-medium-emphasis">Hours spoken per class and workspace — monthly breakdown</p>
@@ -28,7 +28,7 @@
       </div>
     </div>
 
-    <!-- Workspace KPI row -->
+    <!-- KPI row -->
     <v-row class="mb-6">
       <v-col v-for="kpi in kpis" :key="kpi.label" cols="6" sm="3">
         <v-card rounded="xl" elevation="0" border class="pa-4 text-center">
@@ -39,7 +39,7 @@
       </v-col>
     </v-row>
 
-    <!-- Classes breakdown table -->
+    <!-- Classes table -->
     <v-card rounded="xl" elevation="0" border class="mb-6">
       <v-card-title class="text-body-1 font-weight-bold pt-4 px-4">
         <v-icon start color="primary">mdi-google-classroom</v-icon>
@@ -57,7 +57,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in classRows" :key="row.cls.id" class="table-row">
+            <tr v-for="row in classRows" :key="row.cls.id">
               <td class="pl-6 py-3">
                 <div class="d-flex align-center gap-2">
                   <v-avatar color="teal" size="32" rounded="lg">
@@ -72,9 +72,7 @@
               <td class="text-right">
                 <v-chip size="small" color="primary" variant="tonal">{{ row.sessionCount }}</v-chip>
               </td>
-              <td class="text-right">
-                <span class="font-weight-bold">{{ formatHours(row.totalMinutes) }}</span>
-              </td>
+              <td class="text-right"><span class="font-weight-bold">{{ formatHours(row.totalMinutes) }}</span></td>
               <td class="text-right text-medium-emphasis text-caption">
                 {{ row.sessionCount > 0 ? formatMins(Math.round(row.totalMinutes / row.sessionCount)) : '—' }}
               </td>
@@ -85,7 +83,7 @@
             </tr>
           </tbody>
           <tfoot v-if="classRows.length">
-            <tr class="total-row">
+            <tr class="bg-primary-lighten-5">
               <td class="pl-6 py-3 font-weight-bold">TOTAL — {{ selectedWorkspace?.name }}</td>
               <td class="text-right font-weight-bold">{{ totals.sessionCount }}</td>
               <td class="text-right font-weight-bold text-primary">{{ formatHours(totals.totalMinutes) }}</td>
@@ -97,31 +95,40 @@
       </v-card-text>
     </v-card>
 
-    <!-- Monthly trend chart per class -->
+    <!-- Trend chart -->
     <v-card rounded="xl" elevation="0" border>
       <v-card-title class="text-body-1 font-weight-bold pt-4 px-4">
         <v-icon start color="primary">mdi-chart-line</v-icon>
         Monthly Trend — All Classes
       </v-card-title>
       <v-card-text class="px-4 pb-4">
-        <div class="trend-chart">
-          <div v-for="cls in workspaceClasses" :key="cls.id" class="trend-row mb-4">
-            <div class="trend-label text-caption font-weight-bold">{{ cls.name }}</div>
-            <div class="trend-bars">
-              <div v-for="m in allMonths" :key="m.value" class="trend-bar-col">
-                <div
-                  class="trend-bar"
-                  :style="{ height: `${barHeight(cls.id, m.value)}px`, background: barColor(cls.id) }"
-                  :title="`${m.label}: ${formatHours(monthStat(cls.id, m.value).totalMinutes)}`"
-                />
-                <span class="trend-bar-label">{{ m.shortLabel }}</span>
+        <div class="d-flex flex-column gap-2">
+          <div v-for="cls in workspaceClasses" :key="cls.id" class="d-flex align-end gap-3 mb-2">
+            <span class="text-caption font-weight-bold text-medium-emphasis" style="min-width:90px">{{ cls.name }}</span>
+            <div class="d-flex align-end gap-2 flex-grow-1">
+              <div
+                v-for="m in allMonths" :key="m.value"
+                class="d-flex flex-column align-center gap-1 flex-grow-1"
+              >
+                <v-tooltip :text="`${m.label}: ${formatHours(monthStat(cls.id, m.value).totalMinutes)}`">
+                  <template #activator="{ props: tip }">
+                    <div
+                      v-bind="tip"
+                      class="w-100 rounded-t"
+                      :style="`height:${barHeight(cls.id, m.value)}px; background:${barColor(cls.id)}; min-width:24px; min-height:4px`"
+                    />
+                  </template>
+                </v-tooltip>
+                <span class="text-caption text-disabled" style="font-size:10px">{{ m.shortLabel }}</span>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Legend -->
         <div class="d-flex flex-wrap gap-3 mt-4">
-          <div v-for="cls in workspaceClasses" :key="cls.id" class="legend-item">
-            <span class="legend-dot" :style="{ background: barColor(cls.id) }" />
+          <div v-for="cls in workspaceClasses" :key="cls.id" class="d-flex align-center gap-1">
+            <span class="rounded-circle d-inline-block" style="width:10px;height:10px" :style="`background:${barColor(cls.id)}`" />
             <span class="text-caption ml-1">{{ cls.name }}</span>
           </div>
         </div>
@@ -143,7 +150,6 @@ const allMonths = [
   { value: '2026-05', label: 'May 2026', shortLabel: 'May' },
   { value: '2026-06', label: 'June 2026', shortLabel: 'Jun' },
 ]
-
 const selectedMonth = ref('2026-06')
 
 const workspaceItems = computed(() => store.workspaces.map(w => ({ title: w.name, value: w.id })))
@@ -155,12 +161,7 @@ const workspaceClasses = computed(() => store.getClassesForWorkspace(selectedWor
 const classRows = computed(() =>
   workspaceClasses.value.map(cls => {
     const rows = store.getStatsForClass(cls.id, selectedMonth.value)
-    return {
-      cls,
-      sessionCount: rows.reduce((a, b) => a + b.sessionCount, 0),
-      totalMinutes: rows.reduce((a, b) => a + b.totalMinutes, 0),
-      participantCount: rows.reduce((a, b) => a + b.participantCount, 0),
-    }
+    return { cls, sessionCount: rows.reduce((a, b) => a + b.sessionCount, 0), totalMinutes: rows.reduce((a, b) => a + b.totalMinutes, 0), participantCount: rows.reduce((a, b) => a + b.participantCount, 0) }
   })
 )
 
@@ -179,47 +180,17 @@ const kpis = computed(() => [
 
 function monthStat(classId, month) {
   const rows = store.getStatsForClass(classId, month)
-  return {
-    totalMinutes: rows.reduce((a, b) => a + b.totalMinutes, 0),
-    sessionCount: rows.reduce((a, b) => a + b.sessionCount, 0),
-  }
+  return { totalMinutes: rows.reduce((a, b) => a + b.totalMinutes, 0), sessionCount: rows.reduce((a, b) => a + b.sessionCount, 0) }
 }
 
 const COLORS = ['#1565C0','#00897B','#6A1B9A','#E65100','#1B5E20']
-function barColor(classId) {
-  const idx = workspaceClasses.value.findIndex(c => c.id === classId)
-  return COLORS[idx % COLORS.length]
-}
-
+function barColor(classId) { const idx = workspaceClasses.value.findIndex(c => c.id === classId); return COLORS[idx % COLORS.length] }
 function barHeight(classId, month) {
   const val = monthStat(classId, month).totalMinutes
   const allVals = workspaceClasses.value.flatMap(c => allMonths.map(m => monthStat(c.id, m.value).totalMinutes))
-  const max = Math.max(...allVals, 1)
-  return Math.max(4, Math.round((val / max) * 80))
+  return Math.max(4, Math.round((val / Math.max(...allVals, 1)) * 80))
 }
 
-function formatHours(min) {
-  const h = Math.floor(min / 60)
-  const m = min % 60
-  return `${h}h ${m}m`
-}
-
-function formatMins(min) {
-  if (min >= 60) return formatHours(min)
-  return `${min}m`
-}
+function formatHours(min) { const h = Math.floor(min / 60); const m = min % 60; return `${h}h ${m}m` }
+function formatMins(min) { if (min >= 60) return formatHours(min); return `${min}m` }
 </script>
-
-<style scoped>
-.table-row:hover { background: rgba(0,0,0,0.02); }
-.total-row { background: rgba(21,101,192,0.05); border-top: 2px solid rgba(21,101,192,0.15); }
-.trend-chart { display: flex; flex-direction: column; gap: 4px; }
-.trend-row { display: flex; align-items: flex-end; gap: 12px; }
-.trend-label { min-width: 90px; font-size: 12px; color: #666; }
-.trend-bars { display: flex; align-items: flex-end; gap: 8px; flex: 1; }
-.trend-bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-.trend-bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.4s ease; min-width: 24px; }
-.trend-bar-label { font-size: 10px; color: #999; }
-.legend-item { display: flex; align-items: center; }
-.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
-</style>

@@ -1,7 +1,7 @@
 <template>
-  <v-chip :color="color" size="small" variant="tonal" class="font-weight-bold language-badge">
+  <v-chip :color="color" size="small" variant="tonal" class="font-weight-bold">
     <template #prepend>
-      <span class="flag mr-1">{{ flag }}</span>
+      <span style="font-size:14px; line-height:1">{{ flag }}</span>
     </template>
     {{ label }}
   </v-chip>
@@ -16,7 +16,3 @@ const flag = computed(() => ({ IT: '🇮🇹', EN: '🇬🇧', SQ: '🇦🇱' }[
 const label = computed(() => ({ IT: 'Italian', EN: 'English', SQ: 'Albanian' }[props.lang]))
 const color = computed(() => ({ IT: 'green', EN: 'blue', SQ: 'red' }[props.lang]))
 </script>
-
-<style scoped>
-.flag { font-size: 14px; line-height: 1; }
-</style>

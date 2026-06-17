@@ -1,82 +1,130 @@
 <template>
-  <div class="captions-page" :class="{ 'captions-page--dark': uiStore.darkMode }">
+  <v-layout>
 
-    <!-- TOP BAR -->
-    <div class="captions-topbar">
-      <div class="d-flex align-center gap-2 flex-grow-1 min-w-0">
-        <v-avatar color="primary" size="30" rounded="lg" class="flex-shrink-0">
-          <v-icon color="white" size="16">mdi-translate</v-icon>
-        </v-avatar>
-        <div class="min-w-0">
-          <p class="text-body-2 font-weight-bold text-truncate" style="line-height:1.2">{{ session?.title ?? 'Live Session' }}</p>
-          <div class="d-flex align-center gap-1">
-            <StatusChip v-if="session" :status="session.status" />
-            <ConnectionStatus :status="wsStatus" />
-          </div>
+    <!-- APP BAR -->
+    <v-app-bar flat border="b" height="56" density="compact">
+      <v-avatar color="primary" size="28" rounded="lg" class="ml-3">
+        <v-icon color="white" size="15">mdi-translate</v-icon>
+      </v-avatar>
+      <v-app-bar-title class="ml-2">
+        <span class="text-body-2 font-weight-bold">{{ session?.title ?? 'Live Session' }}</span>
+        <div class="d-flex align-center gap-1">
+          <StatusChip v-if="session" :status="session.status" />
+          <ConnectionStatus :status="wsStatus" />
         </div>
-      </div>
+      </v-app-bar-title>
 
-      <!-- Language quick-switch -->
-      <div class="lang-switch-row flex-shrink-0">
-        <button
-          v-for="lang in availableLangs"
-          :key="lang.value"
-          class="lang-btn"
-          :class="{ 'lang-btn--active': selectedLanguage === lang.value }"
-          @click="selectedLanguage = lang.value"
-        >
-          <span>{{ lang.flag }}</span>
-          <span class="lang-label">{{ lang.shortLabel }}</span>
-        </button>
-      </div>
+      <template #append>
+        <div class="d-flex align-center gap-1 pr-1">
+          <!-- Language toggle -->
+          <v-btn-toggle
+            v-model="selectedLanguage"
+            mandatory density="compact"
+            rounded="lg" divided color="primary"
+            class="mr-1"
+          >
+            <v-btn
+              v-for="lang in availableLangs" :key="lang.value"
+              :value="lang.value" size="small"
+              class="px-2 px-sm-3"
+            >
+              <span>{{ lang.flag }}</span>
+              <span class="d-none d-sm-inline ml-1 text-caption">{{ lang.shortLabel }}</span>
+            </v-btn>
+          </v-btn-toggle>
 
-      <div class="d-flex align-center gap-1 flex-shrink-0">
-        <v-btn icon="mdi-tune" variant="tonal" size="small" @click="openSettings" />
-        <v-btn :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'" variant="tonal" size="small" @click="uiStore.toggleDarkMode()" />
-        <v-btn icon="mdi-exit-to-app" variant="tonal" size="small" color="error" @click="leave" />
-      </div>
-    </div>
-
-    <!-- BODY -->
-    <div class="captions-body">
-
-      <!-- Settings panel — side on desktop, bottom sheet on mobile -->
-      <transition name="slide-x">
-        <aside v-if="showSettings && !smAndDown" class="settings-panel">
-          <SettingsPanelContent
-            v-model:selected-language="selectedLanguage"
-            v-model:show-original="showOriginal"
-            v-model:audio-enabled="audioEnabled"
-            v-model:selected-voice="selectedVoice"
-            :available-voices="availableVoices"
-            :participants="participants"
-            :participant-count="session?.participantCount ?? 0"
-            :caption-font-size="uiStore.captionFontSize"
-            @update:caption-font-size="uiStore.setCaptionFontSize($event)"
-            @close="showSettings = false"
+          <v-btn
+            :icon="showSettings ? 'mdi-close' : 'mdi-tune'"
+            variant="tonal" size="small"
+            @click="showSettings = !showSettings"
           />
-        </aside>
-      </transition>
-
-      <!-- Caption main area -->
-      <main class="caption-main">
-        <CaptionStream
-          :segments="segments"
-          :target-language="selectedLanguage"
-          :font-size="uiStore.captionFontSize"
-          :show-original="showOriginal"
-          :dark="uiStore.darkMode"
-        />
-      </main>
-    </div>
-
-    <!-- Mobile bottom sheet settings -->
-    <v-bottom-sheet v-if="smAndDown" v-model="showSettings" :inset="false">
-      <v-sheet rounded="t-xl" max-height="80vh" style="overflow-y:auto">
-        <div class="d-flex align-center justify-space-between px-4 pt-4 pb-2">
-          <span class="text-body-1 font-weight-bold">Settings</span>
-          <v-btn icon="mdi-close" size="small" variant="text" @click="showSettings = false" />
+          <v-btn
+            :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
+            variant="tonal" size="small"
+            @click="uiStore.toggleDarkMode()"
+          />
+          <v-btn icon="mdi-exit-to-app" variant="tonal" size="small" color="error" @click="leave" />
         </div>
+      </template>
+    </v-app-bar>
+
+    <!-- SETTINGS DRAWER — desktop only -->
+    <v-navigation-drawer
+      v-if="!smAndDown"
+      v-model="showSettings"
+      temporary
+      location="right"
+      width="300"
+      border="s"
+    >
+      <v-list-item class="py-3">
+        <v-list-item-title class="text-body-1 font-weight-bold">Settings</v-list-item-title>
+        <template #append>
+          <v-btn icon="mdi-close" size="small" variant="text" @click="showSettings = false" />
+        </template>
+      </v-list-item>
+      <v-divider />
+      <SettingsPanelContent
+        v-model:selected-language="selectedLanguage"
+        v-model:show-original="showOriginal"
+        v-model:audio-enabled="audioEnabled"
+        v-model:selected-voice="selectedVoice"
+        :available-voices="availableVoices"
+        :participants="participants"
+        :participant-count="session?.participantCount ?? 0"
+        :caption-font-size="uiStore.captionFontSize"
+        @update:caption-font-size="uiStore.setCaptionFontSize($event)"
+      />
+    </v-navigation-drawer>
+
+    <!-- MAIN CAPTION AREA -->
+    <v-main>
+      <v-sheet
+        :color="uiStore.darkMode ? 'grey-darken-4' : 'grey-lighten-4'"
+        class="d-flex flex-column overflow-hidden"
+        style="height:100%"
+      >
+        <!-- Empty waiting state -->
+        <div v-if="!segments.length" class="d-flex flex-column align-center justify-center flex-grow-1">
+          <v-progress-circular indeterminate color="primary" size="48" class="mb-4" />
+          <p class="text-body-2 text-medium-emphasis">Waiting for the teacher to start speaking…</p>
+        </div>
+
+        <!-- Caption blocks -->
+        <div v-else class="d-flex flex-column justify-end pa-4 pa-sm-6 h-100 overflow-hidden">
+          <v-slide-y-reverse-transition group>
+            <v-sheet
+              v-for="seg in visibleSegments" :key="seg.id"
+              rounded="xl"
+              :color="uiStore.darkMode ? 'grey-darken-3' : 'white'"
+              class="pa-4 pa-sm-5 mb-3"
+              :style="`border-left: 4px solid ${seg.isFinal ? '#1565C0' : '#ff9800'}; opacity: ${seg.isFinal ? 1 : 0.8}`"
+              elevation="1"
+            >
+              <p
+                class="font-weight-semibold ma-0"
+                :class="uiStore.darkMode ? 'text-white' : 'text-on-surface'"
+                :style="`font-size: ${uiStore.captionFontSize}px; line-height: 1.5`"
+              >{{ displayText(seg) }}</p>
+              <div v-if="showOriginal" class="d-flex align-center gap-1 mt-1">
+                <v-icon size="12" color="grey">mdi-translate</v-icon>
+                <span class="text-caption text-disabled font-italic">{{ seg.originalText }}</span>
+              </div>
+            </v-sheet>
+          </v-slide-y-reverse-transition>
+        </div>
+      </v-sheet>
+    </v-main>
+
+    <!-- MOBILE bottom-sheet settings -->
+    <v-bottom-sheet v-if="smAndDown" v-model="showSettings" :inset="false">
+      <v-sheet rounded="t-xl" max-height="80vh" class="overflow-y-auto">
+        <v-list-item class="py-3">
+          <v-list-item-title class="text-body-1 font-weight-bold">Settings</v-list-item-title>
+          <template #append>
+            <v-btn icon="mdi-close" size="small" variant="text" @click="showSettings = false" />
+          </template>
+        </v-list-item>
         <v-divider />
         <SettingsPanelContent
           v-model:selected-language="selectedLanguage"
@@ -88,19 +136,21 @@
           :participant-count="session?.participantCount ?? 0"
           :caption-font-size="uiStore.captionFontSize"
           @update:caption-font-size="uiStore.setCaptionFontSize($event)"
-          @close="showSettings = false"
-          :hide-close="true"
         />
       </v-sheet>
     </v-bottom-sheet>
 
-    <!-- Audio on indicator -->
-    <div v-if="audioEnabled" class="audio-indicator">
-      <v-icon size="14" color="white">mdi-volume-high</v-icon>
-      <span class="text-caption text-white ml-1">Audio ON · AI</span>
-    </div>
+    <!-- Audio indicator -->
+    <v-chip
+      v-if="audioEnabled"
+      color="black"
+      size="small"
+      prepend-icon="mdi-volume-high"
+      class="text-white"
+      style="position:fixed; bottom:16px; right:16px; z-index:100; opacity:0.85"
+    >Audio ON · AI</v-chip>
 
-  </div>
+  </v-layout>
 </template>
 
 <script setup>
@@ -111,7 +161,6 @@ import { useSessionStore } from '../../stores/session.js'
 import { useParticipantStore } from '../../stores/participant.js'
 import { useProviderStore } from '../../stores/provider.js'
 import { useUiStore } from '../../stores/ui.js'
-import CaptionStream from '../../components/student/CaptionStream.vue'
 import SettingsPanelContent from '../../components/student/SettingsPanelContent.vue'
 import StatusChip from '../../components/shared/StatusChip.vue'
 import ConnectionStatus from '../../components/shared/ConnectionStatus.vue'
@@ -127,6 +176,7 @@ const uiStore = useUiStore()
 const sessionId = route.params.id
 const session = computed(() => sessionStore.getSession(sessionId))
 const segments = computed(() => sessionStore.getTranscript(sessionId))
+const visibleSegments = computed(() => segments.value.slice(-5))
 const participants = computed(() => participantStore.getParticipantsForSession(sessionId))
 
 const selectedLanguage = ref(participantStore.currentParticipant?.targetLanguage ?? 'EN')
@@ -149,7 +199,11 @@ const availableVoices = computed(() =>
     .filter(v => v.language === selectedLanguage.value)
 )
 
-function openSettings() { showSettings.value = !showSettings.value }
+function displayText(seg) {
+  if (selectedLanguage.value === seg.sourceLanguage) return seg.originalText
+  const tr = seg.translations?.find(t => t.targetLanguage === selectedLanguage.value)
+  return tr?.translatedText ?? seg.originalText
+}
 
 function leave() {
   if (participantStore.currentParticipant) participantStore.leaveSession(participantStore.currentParticipant.id)
@@ -159,41 +213,3 @@ function leave() {
 onMounted(() => { if (!session.value) router.push('/student/join') })
 onUnmounted(() => { wsStatus.value = 'DISCONNECTED' })
 </script>
-
-<style scoped>
-.captions-page { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #F5F7FA; transition: background 0.3s; }
-.captions-page--dark { background: #12121F; color: white; }
-
-.captions-topbar {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px; background: white;
-  border-bottom: 1px solid rgba(0,0,0,0.08); min-height: 58px;
-  flex-wrap: nowrap; overflow: hidden;
-}
-.captions-page--dark .captions-topbar { background: #1E1E2E; border-bottom-color: rgba(255,255,255,0.08); }
-
-.lang-switch-row { display: flex; gap: 3px; background: rgba(0,0,0,0.05); border-radius: 10px; padding: 3px; }
-.captions-page--dark .lang-switch-row { background: rgba(255,255,255,0.08); }
-.lang-btn { display: flex; align-items: center; gap: 3px; padding: 4px 8px; border-radius: 7px; border: none; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600; background: transparent; color: #666; transition: all 0.15s; white-space: nowrap; }
-.lang-btn:hover { background: rgba(0,0,0,0.06); }
-.lang-btn--active { background: white; color: #1565C0; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
-.captions-page--dark .lang-btn--active { background: #2a2a3e; color: #42A5F5; }
-.lang-label { font-size: 11px; }
-
-@media (max-width: 480px) {
-  .lang-label { display: none; }
-  .lang-btn { padding: 5px 7px; }
-}
-
-.captions-body { flex: 1; display: flex; overflow: hidden; }
-.settings-panel { width: 290px; min-width: 270px; border-right: 1px solid rgba(0,0,0,0.08); overflow-y: auto; background: white; }
-.captions-page--dark .settings-panel { background: #1E1E2E; border-right-color: rgba(255,255,255,0.08); }
-.caption-main { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
-
-.audio-indicator { position: fixed; bottom: 16px; right: 16px; display: flex; align-items: center; padding: 6px 14px; background: rgba(0,0,0,0.72); border-radius: 20px; backdrop-filter: blur(8px); z-index: 100; }
-
-.slide-x-enter-from { transform: translateX(-100%); opacity: 0; }
-.slide-x-enter-active { transition: all 0.25s ease; }
-.slide-x-leave-to { transform: translateX(-100%); opacity: 0; }
-.slide-x-leave-active { transition: all 0.2s ease; }
-</style>

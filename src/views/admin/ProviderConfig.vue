@@ -7,7 +7,7 @@
         <p class="text-body-2 text-medium-emphasis">Manage STT, Translation, and TTS providers</p>
       </div>
       <v-spacer />
-      <v-btn color="primary" variant="flat" prepend-icon="mdi-plus">Add Provider</v-btn>
+      <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" rounded="lg">Add Provider</v-btn>
     </div>
 
     <v-tabs v-model="activeType" color="primary" class="mb-6">
@@ -35,21 +35,27 @@
       </v-col>
     </v-row>
 
+    <!-- Fallback chain -->
     <v-card rounded="xl" elevation="0" border class="mt-6">
       <v-card-title class="text-body-1 font-weight-bold pt-4 px-4">
         <v-icon start color="primary">mdi-backup-restore</v-icon>
         Fallback Chain
       </v-card-title>
       <v-card-text class="px-4 pb-4">
-        <div v-for="type in ['STT', 'TRANSLATION', 'TTS']" :key="type" class="fallback-chain mb-4">
+        <div v-for="type in ['STT', 'TRANSLATION', 'TTS']" :key="type" class="mb-4">
           <p class="text-caption font-weight-bold text-uppercase text-medium-emphasis mb-2">{{ type }}</p>
-          <div class="chain-row">
+          <div class="d-flex align-center gap-2 flex-wrap">
             <template v-for="(provider, i) in sortedByPriority(type)" :key="provider.id">
-              <div class="chain-node" :class="{ 'chain-node--disabled': !provider.enabled }">
-                <v-icon size="14" :color="provider.enabled ? typeColor(type) : 'grey'">{{ typeIcon(type) }}</v-icon>
-                <span class="text-caption ml-1">{{ provider.name }}</span>
-                <v-chip size="x-small" :color="provider.priority === 1 ? 'amber' : 'grey'" variant="text">P{{ provider.priority }}</v-chip>
-              </div>
+              <v-chip
+                size="small"
+                :color="provider.enabled ? typeColor(type) : 'grey'"
+                :variant="provider.enabled ? 'tonal' : 'outlined'"
+                :prepend-icon="typeIcon(type)"
+                :style="!provider.enabled ? 'opacity:0.4' : ''"
+              >
+                {{ provider.name }}
+                <v-chip size="x-small" variant="text" class="ml-1">P{{ provider.priority }}</v-chip>
+              </v-chip>
               <v-icon v-if="i < sortedByPriority(type).length - 1" size="14" color="grey">mdi-arrow-right</v-icon>
             </template>
           </div>
@@ -57,6 +63,7 @@
       </v-card-text>
     </v-card>
 
+    <!-- Edit dialog -->
     <v-dialog v-model="editDialog" max-width="500">
       <v-card rounded="xl" v-if="editProvider">
         <v-card-title class="pt-6 px-6"><v-icon start color="primary">mdi-pencil</v-icon>Edit Provider</v-card-title>
@@ -68,7 +75,7 @@
         <v-card-actions class="px-6 pb-6 gap-2">
           <v-spacer />
           <v-btn variant="text" @click="editDialog = false">Cancel</v-btn>
-          <v-btn color="primary" variant="flat" @click="saveEdit">Save</v-btn>
+          <v-btn color="primary" variant="flat" rounded="lg" @click="saveEdit">Save</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -89,13 +96,10 @@ const filteredProviders = computed(() =>
   activeType.value === 'ALL' ? providerStore.providers : providerStore.getByType(activeType.value)
 )
 
-function sortedByPriority(type) {
-  return providerStore.getByType(type).slice().sort((a, b) => a.priority - b.priority)
-}
+function sortedByPriority(type) { return providerStore.getByType(type).slice().sort((a, b) => a.priority - b.priority) }
 
 const typeColors = { STT: 'blue', TRANSLATION: 'purple', TTS: 'teal' }
 const typeIcons = { STT: 'mdi-microphone-settings', TRANSLATION: 'mdi-translate', TTS: 'mdi-speaker-wireless' }
-
 function typeColor(type) { return typeColors[type] }
 function typeIcon(type) { return typeIcons[type] }
 
@@ -103,15 +107,8 @@ function openEdit(id) {
   const p = providerStore.providers.find(x => x.id === id)
   if (p) { editProvider.value = { ...p }; editDialog.value = true }
 }
-
 function saveEdit() {
   if (editProvider.value) providerStore.updateProvider(editProvider.value.id, editProvider.value)
   editDialog.value = false
 }
 </script>
-
-<style scoped>
-.chain-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.chain-node { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 8px; background: rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); }
-.chain-node--disabled { opacity: 0.4; }
-</style>

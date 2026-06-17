@@ -1,15 +1,23 @@
 <template>
-  <v-card rounded="xl" :class="{ 'provider-card--disabled': !provider.enabled }" class="provider-card">
+  <v-card
+    rounded="xl" border
+    :style="!provider.enabled ? 'opacity:0.55' : ''"
+    class="h-100"
+  >
     <v-card-item>
       <template #prepend>
-        <v-avatar :color="typeColor" size="40">
+        <v-avatar :color="typeColor" size="40" rounded="lg">
           <v-icon color="white" size="20">{{ typeIcon }}</v-icon>
         </v-avatar>
       </template>
       <v-card-title class="text-body-1 font-weight-bold">{{ provider.name }}</v-card-title>
       <v-card-subtitle class="text-caption">{{ provider.providerCode }}</v-card-subtitle>
       <template #append>
-        <v-switch :model-value="provider.enabled" color="success" hide-details density="compact" @update:model-value="emit('toggle', provider.id)" />
+        <v-switch
+          :model-value="provider.enabled"
+          color="success" hide-details density="compact"
+          @update:model-value="emit('toggle', provider.id)"
+        />
       </template>
     </v-card-item>
 
@@ -20,8 +28,8 @@
       <v-row class="text-caption text-medium-emphasis">
         <v-col cols="6"><v-icon size="12" class="mr-1">mdi-sort-numeric-ascending</v-icon>Priority: <strong>{{ provider.priority }}</strong></v-col>
         <v-col cols="6"><v-icon size="12" class="mr-1">mdi-timer-outline</v-icon>Timeout: <strong>{{ provider.timeoutMs / 1000 }}s</strong></v-col>
-        <v-col cols="6" v-if="provider.costLimit"><v-icon size="12" class="mr-1">mdi-currency-usd</v-icon>Limit: <strong>${{ provider.costLimit }}/mo</strong></v-col>
-        <v-col cols="6" v-if="provider.fallbackProviderCode"><v-icon size="12" class="mr-1">mdi-backup-restore</v-icon>Fallback: <strong>{{ provider.fallbackProviderCode }}</strong></v-col>
+        <v-col v-if="provider.costLimit" cols="6"><v-icon size="12" class="mr-1">mdi-currency-usd</v-icon>Limit: <strong>${{ provider.costLimit }}/mo</strong></v-col>
+        <v-col v-if="provider.fallbackProviderCode" cols="6"><v-icon size="12" class="mr-1">mdi-backup-restore</v-icon>Fallback: <strong>{{ provider.fallbackProviderCode }}</strong></v-col>
       </v-row>
     </v-card-text>
 
@@ -44,8 +52,3 @@ const emit = defineEmits(['toggle', 'edit'])
 const typeColor = computed(() => ({ STT: 'blue', TRANSLATION: 'purple', TTS: 'teal' }[props.provider.providerType] ?? 'grey'))
 const typeIcon = computed(() => ({ STT: 'mdi-microphone-settings', TRANSLATION: 'mdi-translate', TTS: 'mdi-speaker-wireless' }[props.provider.providerType] ?? 'mdi-cog'))
 </script>
-
-<style scoped>
-.provider-card { transition: opacity 0.2s; }
-.provider-card--disabled { opacity: 0.55; }
-</style>

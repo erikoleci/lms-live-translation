@@ -1,19 +1,23 @@
 <template>
-  <div class="lang-selector">
-    <p class="text-caption text-medium-emphasis font-weight-bold text-uppercase mb-2">Display Language</p>
-    <div class="lang-grid">
-      <button
-        v-for="lang in LANGUAGES"
-        :key="lang.value"
-        class="lang-btn"
-        :class="{ 'lang-btn--active': modelValue === lang.value }"
-        @click="emit('update:modelValue', lang.value)"
-      >
-        <span class="lang-flag">{{ lang.flag }}</span>
-        <span class="lang-name">{{ lang.label }}</span>
-      </button>
-    </div>
-  </div>
+  <v-btn-toggle
+    :model-value="modelValue"
+    mandatory
+    color="primary"
+    variant="outlined"
+    rounded="lg"
+    divided
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+    <v-btn
+      v-for="lang in LANGUAGES"
+      :key="lang.value"
+      :value="lang.value"
+      class="px-3 px-sm-5"
+    >
+      <span style="font-size:20px">{{ lang.flag }}</span>
+      <span class="ml-2 text-body-2 font-weight-medium d-none d-sm-inline">{{ lang.label }}</span>
+    </v-btn>
+  </v-btn-toggle>
 </template>
 
 <script setup>
@@ -26,13 +30,3 @@ const LANGUAGES = [
   { value: 'SQ', label: 'Albanian', flag: '🇦🇱' },
 ]
 </script>
-
-<style scoped>
-.lang-grid { display: flex; gap: 8px; }
-.lang-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 16px; border: 2px solid transparent; border-radius: 12px; background: rgba(0,0,0,0.04); cursor: pointer; transition: all 0.15s; min-width: 80px; font-family: inherit; }
-.lang-btn:hover { background: rgba(21,101,192,0.08); border-color: rgba(21,101,192,0.3); }
-.lang-btn--active { background: rgba(21,101,192,0.12); border-color: #1565C0; }
-.lang-flag { font-size: 24px; }
-.lang-name { font-size: 12px; font-weight: 600; color: #555; }
-.lang-btn--active .lang-name { color: #1565C0; }
-</style>

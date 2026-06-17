@@ -43,12 +43,27 @@
             Provider Health
           </v-card-title>
           <v-card-text class="px-4 pb-2">
-            <div v-for="p in providerStore.providers" :key="p.id" class="health-row">
-              <v-icon size="14" :color="p.enabled ? 'success' : 'grey'">{{ p.enabled ? 'mdi-check-circle' : 'mdi-minus-circle' }}</v-icon>
-              <span class="text-body-2 text-truncate flex-grow-1">{{ p.name }}</span>
-              <v-chip size="x-small" :color="typeColor(p.providerType)" variant="tonal">{{ p.providerType }}</v-chip>
-              <span class="text-caption text-disabled">P{{ p.priority }}</span>
-            </div>
+            <v-list density="compact" nav class="pa-0">
+              <v-list-item
+                v-for="p in providerStore.providers" :key="p.id"
+                :border="true"
+                rounded="lg"
+                class="mb-1 px-2"
+              >
+                <template #prepend>
+                  <v-icon size="14" :color="p.enabled ? 'success' : 'grey'" class="mr-2">
+                    {{ p.enabled ? 'mdi-check-circle' : 'mdi-minus-circle' }}
+                  </v-icon>
+                </template>
+                <v-list-item-title class="text-body-2">{{ p.name }}</v-list-item-title>
+                <template #append>
+                  <div class="d-flex align-center gap-1">
+                    <v-chip size="x-small" :color="typeColor(p.providerType)" variant="tonal">{{ p.providerType }}</v-chip>
+                    <span class="text-caption text-disabled">P{{ p.priority }}</span>
+                  </div>
+                </template>
+              </v-list-item>
+            </v-list>
           </v-card-text>
           <v-card-actions class="px-4 pb-4 pt-0">
             <v-btn variant="tonal" size="small" to="/admin/providers" prepend-icon="mdi-cog" block rounded="lg">Configure</v-btn>
@@ -66,18 +81,25 @@
             Supported Languages
           </v-card-title>
           <v-card-text class="px-4 pb-3">
-            <div v-for="lang in languages" :key="lang.code" class="lang-row">
-              <span style="font-size:22px">{{ lang.flag }}</span>
-              <div class="flex-grow-1 min-w-0">
-                <p class="text-body-2 font-weight-bold mb-0">{{ lang.name }}</p>
-                <p class="text-caption text-medium-emphasis">{{ lang.code }}</p>
-              </div>
-              <div class="d-flex gap-1 flex-shrink-0">
-                <v-chip size="x-small" color="success" variant="tonal">STT</v-chip>
-                <v-chip size="x-small" color="purple" variant="tonal">TL</v-chip>
-                <v-chip size="x-small" color="teal" variant="tonal">TTS</v-chip>
-              </div>
-            </div>
+            <v-list density="compact" nav class="pa-0">
+              <v-list-item
+                v-for="lang in languages" :key="lang.code"
+                class="px-0"
+              >
+                <template #prepend>
+                  <span style="font-size:22px; line-height:1" class="mr-3">{{ lang.flag }}</span>
+                </template>
+                <v-list-item-title class="text-body-2 font-weight-bold">{{ lang.name }}</v-list-item-title>
+                <v-list-item-subtitle class="text-caption">{{ lang.code }}</v-list-item-subtitle>
+                <template #append>
+                  <div class="d-flex gap-1">
+                    <v-chip size="x-small" color="success" variant="tonal">STT</v-chip>
+                    <v-chip size="x-small" color="purple" variant="tonal">TL</v-chip>
+                    <v-chip size="x-small" color="teal" variant="tonal">TTS</v-chip>
+                  </div>
+                </template>
+              </v-list-item>
+            </v-list>
           </v-card-text>
         </v-card>
       </v-col>
@@ -90,13 +112,18 @@
             Session Policy
           </v-card-title>
           <v-card-text class="px-4 pb-3">
-            <div v-for="policy in policies" :key="policy.label" class="policy-row">
-              <div class="flex-grow-1 min-w-0 pr-3">
-                <p class="text-body-2 font-weight-bold mb-0">{{ policy.label }}</p>
-                <p class="text-caption text-medium-emphasis">{{ policy.description }}</p>
-              </div>
-              <v-chip size="small" color="primary" variant="tonal" class="flex-shrink-0 font-weight-bold">{{ policy.value }}</v-chip>
-            </div>
+            <v-list density="compact" nav class="pa-0">
+              <v-list-item
+                v-for="policy in policies" :key="policy.label"
+                class="px-0"
+              >
+                <v-list-item-title class="text-body-2 font-weight-bold">{{ policy.label }}</v-list-item-title>
+                <v-list-item-subtitle class="text-caption">{{ policy.description }}</v-list-item-subtitle>
+                <template #append>
+                  <v-chip size="small" color="primary" variant="tonal" class="font-weight-bold">{{ policy.value }}</v-chip>
+                </template>
+              </v-list-item>
+            </v-list>
           </v-card-text>
         </v-card>
       </v-col>
@@ -132,12 +159,3 @@ const policies = [
 const typeColors = { STT: 'blue', TRANSLATION: 'purple', TTS: 'teal' }
 function typeColor(t) { return typeColors[t] }
 </script>
-
-<style scoped>
-.health-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
-.health-row:last-child { border-bottom: none; }
-.lang-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
-.lang-row:last-child { border-bottom: none; }
-.policy-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
-.policy-row:last-child { border-bottom: none; }
-</style>
