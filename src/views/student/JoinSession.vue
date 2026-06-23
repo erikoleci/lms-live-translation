@@ -66,6 +66,22 @@
       </v-card-text>
     </v-card>
 
+    <!-- Full session dialog -->
+    <v-dialog v-model="fullDialog" max-width="360">
+      <v-card rounded="xl">
+        <v-card-text class="pa-6 text-center">
+          <v-icon size="48" color="warning" class="mb-3">mdi-account-group</v-icon>
+          <p class="text-body-1 font-weight-bold">Session is Full</p>
+          <p class="text-body-2 text-medium-emphasis mt-1">
+            This session has reached its maximum number of participants.
+          </p>
+        </v-card-text>
+        <v-card-actions class="px-6 pb-6">
+          <v-btn block color="primary" variant="flat" rounded="lg" @click="fullDialog = false">OK</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Error dialog -->
     <v-dialog v-model="errorDialog" max-width="360">
       <v-card rounded="xl">
@@ -98,6 +114,7 @@ const participantStore = useParticipantStore()
 const formRef = ref()
 const joining = ref(false)
 const errorDialog = ref(false)
+const fullDialog = ref(false)
 const form = ref({ code: '', name: '', language: 'EN' })
 
 onMounted(() => { if (route.params.code) form.value.code = route.params.code.toUpperCase() })
@@ -107,8 +124,13 @@ async function submit() {
   if (!valid) return
   joining.value = true
   await new Promise(r => setTimeout(r, 800))
-  const session = sessionStore.sessions.find(s => s.joinCode === form.value.code && ['ACTIVE','PAUSED','WAITING'].includes(s.status))
+  const session = sessionStore.sessions.find(s => s.joinCode === form.value.code && ['ACTIVE', 'PAUSED'].includes(s.status))
   if (!session) { joining.value = false; errorDialog.value = true; return }
+  if (session.participantCount >= session.maxParticipants) {
+    joining.value = false
+    fullDialog.value = true
+    return
+  }
   participantStore.joinSession(session.id, form.value.name, form.value.language)
   session.participantCount++
   joining.value = false

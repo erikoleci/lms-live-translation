@@ -73,6 +73,20 @@
       </v-col>
     </v-row>
 
+    <!-- Pending sessions -->
+    <template v-if="pendingSessions.length">
+      <div class="d-flex align-center gap-2 mb-3">
+        <v-icon size="10" color="blue">mdi-circle-outline</v-icon>
+        <h2 class="text-body-1 font-weight-bold">Ready to Launch</h2>
+        <v-chip size="small" color="blue" variant="tonal">{{ pendingSessions.length }}</v-chip>
+      </div>
+      <v-row class="mb-4 mb-sm-5">
+        <v-col v-for="session in pendingSessions" :key="session.id" cols="12" sm="6" lg="4">
+          <SessionCard :session="session" :class-label="classLabel(session)" />
+        </v-col>
+      </v-row>
+    </template>
+
     <!-- Active sessions -->
     <template v-if="activeSessions.length">
       <div class="d-flex align-center gap-2 mb-3">
@@ -101,7 +115,7 @@
     </template>
 
     <!-- Empty state -->
-    <div v-if="!filteredSessions.length" class="d-flex flex-column align-center justify-center py-16 text-center">
+    <div v-if="!pendingSessions.length && !activeSessions.length && !endedSessions.length" class="d-flex flex-column align-center justify-center py-16 text-center">
       <v-icon size="64" color="grey-lighten-2">mdi-video-wireless-outline</v-icon>
       <h3 class="text-h6 text-medium-emphasis mt-4">No sessions yet</h3>
       <p class="text-body-2 text-disabled">Create your first session to get started.</p>
@@ -135,8 +149,9 @@ const filteredSessions = computed(() => {
   if (workspaceStore.activeClassId) s = s.filter(sess => sess.classId === workspaceStore.activeClassId)
   return s
 })
-const activeSessions = computed(() => filteredSessions.value.filter(s => ['CREATED','WAITING','ACTIVE','PAUSED'].includes(s.status)))
-const endedSessions = computed(() => filteredSessions.value.filter(s => ['ENDED','EXPIRED'].includes(s.status)))
+const pendingSessions = computed(() => filteredSessions.value.filter(s => ['CREATED', 'WAITING'].includes(s.status)))
+const activeSessions = computed(() => filteredSessions.value.filter(s => ['ACTIVE', 'PAUSED'].includes(s.status)))
+const endedSessions = computed(() => filteredSessions.value.filter(s => ['ENDED', 'EXPIRED'].includes(s.status)))
 
 const stats = computed(() => [
   { label: 'Total Sessions', value: sessionStore.sessions.length, icon: 'mdi-video-wireless', color: 'primary' },

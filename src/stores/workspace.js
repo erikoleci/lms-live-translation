@@ -4,6 +4,12 @@ import { ref, computed } from 'vue'
 export const useWorkspaceStore = defineStore('workspace', () => {
   const workspaces = ref([])
   const classes = ref([])
+  const courses = ref([
+    { id: 'cs401', name: 'Computer Science 401' },
+    { id: 'math201', name: 'Mathematics 201' },
+    { id: 'hist301', name: 'History 301' },
+    { id: 'lang101', name: 'Languages 101' },
+  ])
   const monthlyStats = ref([])
   const activeWorkspaceId = ref(null)
   const activeClassId = ref(null)
@@ -33,6 +39,12 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     }
   }
 
+  function addCourse(payload) {
+    const course = { id: `course-${Date.now()}`, name: payload.name, workspaceId: payload.workspaceId }
+    courses.value.push(course)
+    return course
+  }
+
   function createWorkspace(payload) {
     const ws = { id: `ws-${Date.now()}`, name: payload.name, description: payload.description, createdAt: new Date().toISOString() }
     workspaces.value.push(ws)
@@ -60,9 +72,9 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   }
 
   return {
-    workspaces, classes, monthlyStats, activeWorkspaceId, activeClassId,
+    workspaces, classes, courses, monthlyStats, activeWorkspaceId, activeClassId,
     activeWorkspace,
     getClassesForWorkspace, getStatsForClass, getStatsForWorkspace, getWorkspaceTotal,
-    createWorkspace, createClass, deleteClass, setActiveWorkspace, setActiveClass,
+    createWorkspace, createClass, deleteClass, setActiveWorkspace, setActiveClass, addCourse,
   }
-})
+}, { persist: true })
