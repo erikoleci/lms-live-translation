@@ -1,112 +1,99 @@
 <template>
   <v-app :theme="uiStore.darkMode ? 'dark' : 'light'">
 
-    <!-- MOBILE TOP BAR -->
-    <v-app-bar v-if="!isFullscreen" color="primary" elevation="0" height="56" class="d-lg-none">
-      <v-app-bar-nav-icon color="white" @click="mobileDrawer = !mobileDrawer" />
-      <v-app-bar-title>
-        <span class="font-weight-bold text-white" style="font-size:15px">ZANA</span>
-      </v-app-bar-title>
-      <template #append>
-        <v-btn
-          :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-          variant="text" color="white" size="small"
-          @click="uiStore.toggleDarkMode()"
-        />
-      </template>
-    </v-app-bar>
+    <!-- Faqet fullscreen (ActiveSession, LiveCaptions) nuk kanë sidebar -->
+    <template v-if="!isFullscreen">
 
-    <!-- SIDEBAR -->
-    <v-navigation-drawer
-      v-if="!isFullscreen"
-      v-model="sidebarOpen"
-      :permanent="lgAndUp"
-      :temporary="!lgAndUp"
-      width="240"
-      border="e"
-    >
-      <!-- Logo row -->
-      <v-list-item class="py-3 px-4" style="min-height:64px">
-        <template #prepend>
-  <v-avatar
-    size="44"
-    rounded="lg"
-    class="mr-3"
-    style="background: transparent;"
-  >
-    <v-img
-      src="/zana.png"
-      alt="ZANA"
-      cover
-    />
-  </v-avatar>
-</template>
-        <v-list-item-title class="text-body-2 font-weight-bold">ZANA</v-list-item-title>
-        <v-list-item-subtitle class="text-caption">Live Translation</v-list-item-subtitle>
+      <!-- MOBILE TOP BAR -->
+      <v-app-bar color="primary" elevation="2" height="58" class="d-lg-none">
+        <v-app-bar-nav-icon color="white" @click="mobileDrawer = !mobileDrawer" />
+        <v-app-bar-title>
+          <div class="d-flex align-center gap-2">
+            <v-avatar size="28" rounded="lg" style="background:rgba(255,255,255,0.15)">
+              <v-img src="/zana.png" alt="ZANA" cover />
+            </v-avatar>
+            <span class="font-weight-bold text-white" style="font-size:16px; letter-spacing:1px">ZANA</span>
+          </div>
+        </v-app-bar-title>
         <template #append>
-          <v-btn
-            :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-            variant="text" size="x-small"
-            @click="uiStore.toggleDarkMode()"
-          />
+          <v-btn :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
+            variant="text" color="white" size="small" @click="uiStore.toggleDarkMode()" />
         </template>
-      </v-list-item>
+      </v-app-bar>
 
-      <v-divider />
-
-      <v-list nav density="compact" class="pt-2">
-
-        <!-- TEACHER -->
-        <v-list-subheader class="text-caption font-weight-bold mt-2 mb-1" style="letter-spacing:0.8px">
-          <v-icon size="13" color="primary" class="mr-1">mdi-human-male-board</v-icon>
-          TEACHER
-        </v-list-subheader>
-        <v-list-item
-          v-for="item in teacherNav" :key="item.to"
-          :to="item.to" :prepend-icon="item.icon" :title="item.label"
-          rounded="lg" color="primary" class="mb-1"
-        />
-
-        <v-divider class="my-2" />
-
-        <!-- STUDENT -->
-        <v-list-subheader class="text-caption font-weight-bold mb-1" style="letter-spacing:0.8px">
-          <v-icon size="13" color="teal" class="mr-1">mdi-school</v-icon>
-          STUDENT
-        </v-list-subheader>
-        <v-list-item
-          v-for="item in studentNav" :key="item.to"
-          :to="item.to" :prepend-icon="item.icon" :title="item.label"
-          rounded="lg" color="teal" class="mb-1"
-        />
-
-        <v-divider class="my-2" />
-
-        <!-- ADMIN -->
-        <v-list-subheader class="text-caption font-weight-bold mb-1" style="letter-spacing:0.8px">
-          <v-icon size="13" color="orange" class="mr-1">mdi-shield-account</v-icon>
-          ADMIN
-        </v-list-subheader>
-        <v-list-item
-          v-for="item in adminNav" :key="item.to"
-          :to="item.to" :prepend-icon="item.icon" :title="item.label"
-          rounded="lg" color="orange" class="mb-1"
-        />
-      </v-list>
-
-      <!-- Workspace chip -->
-      <template #append>
-        <v-divider />
-        <div class="pa-3">
-          <v-chip
-            color="primary" variant="tonal" size="small"
-            prepend-icon="mdi-domain"
-            class="w-100 justify-start"
-            style="max-width:100%"
-          >{{ workspaceStore.activeWorkspace?.name ?? 'No Workspace' }}</v-chip>
+      <!-- SIDEBAR -->
+      <v-navigation-drawer
+        v-model="sidebarOpen"
+        :permanent="lgAndUp"
+        :temporary="!lgAndUp"
+        width="248"
+        border="e"
+      >
+        <!-- Logo -->
+        <div class="pa-4 d-flex align-center gap-3" style="min-height:68px">
+          <v-avatar size="40" rounded="lg">
+            <v-img src="/zana.png" alt="ZANA" cover />
+          </v-avatar>
+          <div>
+            <div class="text-body-1 font-weight-bold" style="letter-spacing:1px">ZANA</div>
+            <div class="text-caption text-medium-emphasis">Live Translation</div>
+          </div>
+          <v-spacer />
+          <v-btn :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
+            variant="text" size="x-small" @click="uiStore.toggleDarkMode()" />
         </div>
-      </template>
-    </v-navigation-drawer>
+
+        <v-divider />
+
+        <v-list nav density="comfortable" class="px-2 pt-3">
+
+          <!-- TEACHER -->
+          <div class="d-flex align-center gap-1 px-2 mb-2 mt-1">
+            <v-icon size="13" color="primary">mdi-human-male-board</v-icon>
+            <span class="text-caption font-weight-bold text-medium-emphasis" style="letter-spacing:0.8px">MËSUES</span>
+          </div>
+          <v-list-item v-for="item in teacherNav" :key="item.to"
+            :to="item.to" :prepend-icon="item.icon" :title="item.label"
+            rounded="xl" color="primary" class="mb-1" />
+
+          <v-divider class="my-3" />
+
+          <!-- STUDENT -->
+          <div class="d-flex align-center gap-1 px-2 mb-2">
+            <v-icon size="13" color="teal">mdi-school</v-icon>
+            <span class="text-caption font-weight-bold text-medium-emphasis" style="letter-spacing:0.8px">STUDENT</span>
+          </div>
+          <v-list-item v-for="item in studentNav" :key="item.to"
+            :to="item.to" :prepend-icon="item.icon" :title="item.label"
+            rounded="xl" color="teal" class="mb-1" />
+
+          <v-divider class="my-3" />
+
+          <!-- ADMIN -->
+          <div class="d-flex align-center gap-1 px-2 mb-2">
+            <v-icon size="13" color="deep-orange">mdi-shield-account</v-icon>
+            <span class="text-caption font-weight-bold text-medium-emphasis" style="letter-spacing:0.8px">ADMIN</span>
+          </div>
+          <v-list-item v-for="item in adminNav" :key="item.to"
+            :to="item.to" :prepend-icon="item.icon" :title="item.label"
+            rounded="xl" color="deep-orange" class="mb-1" />
+
+        </v-list>
+
+        <!-- Footer workspace -->
+        <template #append>
+          <v-divider />
+          <div class="pa-3">
+            <v-sheet rounded="xl" color="primary" class="pa-3 d-flex align-center gap-2">
+              <v-icon color="white" size="16">mdi-domain</v-icon>
+              <span class="text-caption font-weight-bold text-white text-truncate">
+                {{ workspaceStore.activeWorkspace?.name ?? 'Demo Workspace' }}
+              </span>
+            </v-sheet>
+          </div>
+        </template>
+      </v-navigation-drawer>
+    </template>
 
     <!-- MAIN CONTENT -->
     <v-main>
@@ -144,12 +131,12 @@ const teacherNav = [
   { to: '/teacher', icon: 'mdi-view-dashboard-outline', label: 'Dashboard' },
 ]
 const studentNav = [
-  { to: '/student/join', icon: 'mdi-login-variant', label: 'Join Session' },
+  { to: '/student/join', icon: 'mdi-login-variant', label: 'Hyr në Sesion' },
 ]
 const adminNav = [
-  { to: '/admin', icon: 'mdi-chart-line', label: 'Overview' },
+  { to: '/admin', icon: 'mdi-chart-line', label: 'Përmbledhje' },
   { to: '/admin/workspaces', icon: 'mdi-domain', label: 'Workspaces' },
-  { to: '/admin/stats', icon: 'mdi-chart-bar', label: 'Usage Stats' },
+  { to: '/admin/stats', icon: 'mdi-chart-bar', label: 'Statistika' },
   { to: '/admin/providers', icon: 'mdi-server-network', label: 'Providers' },
 ]
 </script>

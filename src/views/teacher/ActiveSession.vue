@@ -6,6 +6,10 @@
       <v-app-bar-nav-icon v-if="smAndDown" @click="sidebarOpen = !sidebarOpen" />
       <v-btn v-else icon="mdi-arrow-left" variant="text" to="/teacher" />
 
+      <v-avatar size="28" rounded="lg" class="ml-1 mr-2">
+        <v-img src="/zana.png" alt="ZANA" cover />
+      </v-avatar>
+
       <v-app-bar-title>
         <div class="d-flex align-center gap-2">
           <span class="text-body-1 font-weight-bold text-truncate">{{ session.title }}</span>

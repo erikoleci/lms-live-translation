@@ -1,9 +1,9 @@
 <template>
-  <v-chip :color="color" :variant="variant" size="small" class="font-weight-bold text-uppercase">
+  <v-chip :color="color" :variant="variant" size="small" class="font-weight-bold">
     <template #prepend>
-      <v-icon size="12" class="mr-1">{{ icon }}</v-icon>
+      <v-icon size="10" class="mr-1" :class="status === 'ACTIVE' ? 'status-pulse' : ''">mdi-circle</v-icon>
     </template>
-    {{ status }}
+    {{ label }}
   </v-chip>
 </template>
 
@@ -20,9 +20,18 @@ const color = computed(() => ({
   PAUSED: 'warning', ENDED: 'default', FAILED: 'error', EXPIRED: 'grey',
 }[props.status] ?? 'grey'))
 
-const icon = computed(() => ({
-  CREATED: 'mdi-clock-outline', WAITING: 'mdi-dots-horizontal-circle',
-  ACTIVE: 'mdi-broadcast', PAUSED: 'mdi-pause-circle',
-  ENDED: 'mdi-check-circle', FAILED: 'mdi-alert-circle', EXPIRED: 'mdi-timer-off',
-}[props.status] ?? 'mdi-help-circle'))
+const label = computed(() => ({
+  CREATED: 'I Krijuar', WAITING: 'Duke Pritur', ACTIVE: 'Aktiv',
+  PAUSED: 'Pauzuar', ENDED: 'Përfunduar', FAILED: 'Gabim', EXPIRED: 'Skaduar',
+}[props.status] ?? props.status))
 </script>
+
+<style scoped>
+.status-pulse {
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+</style>
