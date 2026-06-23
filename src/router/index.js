@@ -58,7 +58,7 @@ const router = createRouter({
 })
 
 router.afterEach((to) => {
-  document.title = `${to.meta.title ?? 'LMS'} — Live Translation`
+  document.title = `${to.meta.title ?? 'Zana'} — Live Translation`
 })
 
 export default router

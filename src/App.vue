@@ -5,7 +5,7 @@
     <v-app-bar v-if="!isFullscreen" color="primary" elevation="0" height="56" class="d-lg-none">
       <v-app-bar-nav-icon color="white" @click="mobileDrawer = !mobileDrawer" />
       <v-app-bar-title>
-        <span class="font-weight-bold text-white" style="font-size:15px">LMS Live Translation</span>
+        <span class="font-weight-bold text-white" style="font-size:15px">ZANA</span>
       </v-app-bar-title>
       <template #append>
         <v-btn
@@ -28,12 +28,21 @@
       <!-- Logo row -->
       <v-list-item class="py-3 px-4" style="min-height:64px">
         <template #prepend>
-          <v-avatar color="primary" size="36" rounded="lg" class="mr-3">
-            <v-icon color="white" size="20">mdi-translate</v-icon>
-          </v-avatar>
-        </template>
-        <v-list-item-title class="text-body-2 font-weight-bold">LMS Live</v-list-item-title>
-        <v-list-item-subtitle class="text-caption">Translation</v-list-item-subtitle>
+  <v-avatar
+    size="44"
+    rounded="lg"
+    class="mr-3"
+    style="background: transparent;"
+  >
+    <v-img
+      src="/zana.png"
+      alt="ZANA"
+      cover
+    />
+  </v-avatar>
+</template>
+        <v-list-item-title class="text-body-2 font-weight-bold">ZANA</v-list-item-title>
+        <v-list-item-subtitle class="text-caption">Live Translation</v-list-item-subtitle>
         <template #append>
           <v-btn
             :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
