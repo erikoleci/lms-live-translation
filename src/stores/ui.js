@@ -19,4 +19,4 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   return { darkMode, captionFontSize, navDrawer, toggleDarkMode, setCaptionFontSize, toggleNav }
-})
+}, { persist: { pick: ['darkMode', 'captionFontSize'] } })

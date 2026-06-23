@@ -210,6 +210,11 @@ function leave() {
   router.push('/student/join')
 }
 
-onMounted(() => { if (!session.value) router.push('/student/join') })
+onMounted(() => {
+  if (!session.value) { router.push('/student/join'); return }
+  if (!participantStore.currentParticipant || participantStore.currentParticipant.sessionId !== sessionId) {
+    router.push(`/student/join/${session.value.joinCode}`)
+  }
+})
 onUnmounted(() => { wsStatus.value = 'DISCONNECTED' })
 </script>

@@ -51,10 +51,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useSessionStore } from '../../stores/session.js'
+import { useWorkspaceStore } from '../../stores/workspace.js'
 
 const model = defineModel()
 const emit = defineEmits(['created'])
 const sessionStore = useSessionStore()
+const workspaceStore = useWorkspaceStore()
 const formRef = ref()
 const saving = ref(false)
 
@@ -69,12 +71,7 @@ const form = ref({
   studentTranscriptDownloadEnabled: true,
 })
 
-const courses = [
-  { id: 'cs401', name: 'Computer Science 401' },
-  { id: 'math201', name: 'Mathematics 201' },
-  { id: 'hist301', name: 'History 301' },
-  { id: 'lang101', name: 'Languages 101' },
-]
+const courses = computed(() => workspaceStore.courses)
 
 const languageItems = [
   { title: '🇮🇹 Italian', value: 'IT' },

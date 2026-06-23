@@ -39,24 +39,35 @@ export function useSimulatedTranscript(sessionId) {
 
   function start() {
     if (intervalId) return
+    const session = store.getSession(sessionId)
+    const sourceLang = session?.sourceLanguage ?? 'IT'
+
     intervalId = setInterval(() => {
       const text = SENTENCES_IT[sentenceIdx % SENTENCES_IT.length]
       const now = Date.now()
+
+      const translations = []
+      const targetLangs = session?.targetLanguages ?? ['EN', 'SQ']
+      for (const lang of targetLangs) {
+        if (lang === sourceLang) continue
+        const translated = lang === 'EN' ? (TRANSLATIONS_EN[text] ?? text)
+          : lang === 'SQ' ? (TRANSLATIONS_SQ[text] ?? text)
+          : text
+        translations.push({ id: `tr-${lang.toLowerCase()}-${now}`, transcriptSegmentId: `seg-sim-${now}`, targetLanguage: lang, translatedText: translated, isFinal: true, createdAt: new Date().toISOString() })
+      }
+
       const segment = {
         id: `seg-sim-${now}`,
         sessionId,
         sequenceNo: seqNo++,
-        sourceLanguage: 'IT',
+        sourceLanguage: sourceLang,
         originalText: text,
         isFinal: true,
         confidence: parseFloat((0.92 + Math.random() * 0.07).toFixed(2)),
         startOffsetMs: (seqNo - 1) * 4000,
         endOffsetMs: seqNo * 4000,
         createdAt: new Date().toISOString(),
-        translations: [
-          { id: `tr-en-${now}`, transcriptSegmentId: `seg-sim-${now}`, targetLanguage: 'EN', translatedText: TRANSLATIONS_EN[text] ?? text, isFinal: true, createdAt: new Date().toISOString() },
-          { id: `tr-sq-${now}`, transcriptSegmentId: `seg-sim-${now}`, targetLanguage: 'SQ', translatedText: TRANSLATIONS_SQ[text] ?? text, isFinal: true, createdAt: new Date().toISOString() },
-        ],
+        translations,
       }
       store.addTranscriptSegment(segment)
       sentenceIdx++

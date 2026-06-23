@@ -97,4 +97,4 @@ export const useSessionStore = defineStore('session', () => {
     getSession, getTranscript, createSession, updateSessionStatus,
     setActiveSession, setMicActive, setAudioLevel, toggleMute, addTranscriptSegment,
   }
-})
+}, { persist: { pick: ['sessions', 'transcript'] } })

@@ -31,14 +31,23 @@
             <v-icon size="16" :start="!smAndDown">mdi-qrcode</v-icon>
             <span class="d-none d-sm-inline">QR</span>
           </v-btn>
-          <v-btn
-            size="small" variant="tonal" rounded="lg"
-            :disabled="!segments.length"
-            @click="downloadTranscript"
-          >
-            <v-icon size="16" :start="!smAndDown">mdi-download</v-icon>
-            <span class="d-none d-sm-inline">Save</span>
-          </v-btn>
+          <v-menu>
+            <template #activator="{ props: menuProps }">
+              <v-btn
+                size="small" variant="tonal" rounded="lg"
+                :disabled="!segments.length"
+                v-bind="menuProps"
+              >
+                <v-icon size="16" :start="!smAndDown">mdi-download</v-icon>
+                <span class="d-none d-sm-inline">Save</span>
+                <v-icon size="14" end>mdi-chevron-down</v-icon>
+              </v-btn>
+            </template>
+            <v-list density="compact" rounded="lg">
+              <v-list-item prepend-icon="mdi-file-document-outline" title="Export .txt" @click="downloadTranscript('txt')" />
+              <v-list-item prepend-icon="mdi-subtitles-outline" title="Export .srt" @click="downloadTranscript('srt')" />
+            </v-list>
+          </v-menu>
           <v-btn
             :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
             variant="text" size="small"
@@ -207,7 +216,15 @@
         </v-chip>
         <v-spacer />
         <span class="text-caption text-disabled mr-2">{{ segments.length }} segments</span>
-        <v-btn icon="mdi-download" size="x-small" variant="text" :disabled="!segments.length" @click="downloadTranscript" class="mr-1" />
+        <v-menu>
+          <template #activator="{ props: menuProps }">
+            <v-btn icon="mdi-download" size="x-small" variant="text" :disabled="!segments.length" v-bind="menuProps" class="mr-1" />
+          </template>
+          <v-list density="compact" rounded="lg">
+            <v-list-item prepend-icon="mdi-file-document-outline" title="Export .txt" @click="downloadTranscript('txt')" />
+            <v-list-item prepend-icon="mdi-subtitles-outline" title="Export .srt" @click="downloadTranscript('srt')" />
+          </v-list>
+        </v-menu>
       </v-toolbar>
 
       <!-- Transcript list -->
@@ -297,6 +314,7 @@ import { useSessionStore } from '../../stores/session.js'
 import { useUiStore } from '../../stores/ui.js'
 import { useAudio } from '../../composables/useAudio.js'
 import { useSimulatedTranscript } from '../../composables/useSimulatedTranscript.js'
+import { useWebSocket } from '../../composables/useWebSocket.js'
 import SessionControls from '../../components/teacher/SessionControls.vue'
 import StatusChip from '../../components/shared/StatusChip.vue'
 import ConnectionStatus from '../../components/shared/ConnectionStatus.vue'
@@ -313,8 +331,10 @@ const session = computed(() => sessionStore.getSession(sessionId))
 const segments = computed(() => sessionStore.getTranscript(sessionId))
 const actionLoading = ref(false)
 const micLoading = ref(false)
-const wsStatus = ref('DISCONNECTED')
 const sidebarOpen = ref(true)
+
+const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/session/${sessionId}`
+const { status: wsStatus, connect: wsConnect, disconnect: wsDisconnect, send: wsSend } = useWebSocket(wsUrl)
 
 const qrFloat = ref(true)
 const qrMinimized = ref(false)
@@ -351,18 +371,42 @@ function downloadQr() {
   const a = document.createElement('a'); a.download = `join-${session.value?.joinCode}.png`; a.href = canvas.toDataURL(); a.click()
 }
 
-function downloadTranscript() {
+function msToSrtTime(ms) {
+  const h = Math.floor(ms / 3600000)
+  const m = Math.floor((ms % 3600000) / 60000)
+  const s = Math.floor((ms % 60000) / 1000)
+  const ms2 = ms % 1000
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms2).padStart(3,'0')}`
+}
+
+function downloadTranscript(format = 'txt') {
   const sess = session.value; const segs = segments.value; if (!segs.length) return
-  const lines = [`Session: ${sess.title}`, `Course: ${sess.courseName}`, `Languages: ${sess.sourceLanguage} → ${sess.targetLanguages.join(', ')}`, '─'.repeat(60), '']
-  for (const seg of segs) {
-    const t = Math.floor(seg.startOffsetMs / 1000)
-    lines.push(`[${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}] ${seg.originalText}`)
-    for (const tr of seg.translations ?? []) lines.push(`  [${tr.targetLanguage}] ${tr.translatedText}`)
-    lines.push('')
+  let content, filename, mime
+
+  if (format === 'srt') {
+    const lines = []
+    segs.forEach((seg, i) => {
+      lines.push(String(i + 1))
+      lines.push(`${msToSrtTime(seg.startOffsetMs)} --> ${msToSrtTime(seg.endOffsetMs ?? seg.startOffsetMs + 4000)}`)
+      lines.push(seg.originalText)
+      for (const tr of seg.translations ?? []) lines.push(`[${tr.targetLanguage}] ${tr.translatedText}`)
+      lines.push('')
+    })
+    content = lines.join('\n'); filename = `transcript-${sess.joinCode}.srt`; mime = 'text/srt'
+  } else {
+    const lines = [`Session: ${sess.title}`, `Course: ${sess.courseName}`, `Languages: ${sess.sourceLanguage} → ${sess.targetLanguages.join(', ')}`, '─'.repeat(60), '']
+    for (const seg of segs) {
+      const t = Math.floor(seg.startOffsetMs / 1000)
+      lines.push(`[${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}] ${seg.originalText}`)
+      for (const tr of seg.translations ?? []) lines.push(`  [${tr.targetLanguage}] ${tr.translatedText}`)
+      lines.push('')
+    }
+    content = lines.join('\n'); filename = `transcript-${sess.joinCode}.txt`; mime = 'text/plain'
   }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain' }))
-  a.download = `transcript-${sess.joinCode}.txt`; a.click()
-  snack.value = { show: true, text: 'Transcript downloaded!', color: 'success' }
+
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type: mime }))
+  a.download = filename; a.click()
+  snack.value = { show: true, text: `Transcript downloaded as .${format}!`, color: 'success' }
 }
 
 function formatTime(ms) {
@@ -371,6 +415,11 @@ function formatTime(ms) {
 
 const { start: startSim, stop: stopSim } = useSimulatedTranscript(sessionId)
 
+const now = ref(Date.now())
+let tickInterval = null
+onMounted(() => { tickInterval = setInterval(() => { now.value = Date.now() }, 1000) })
+onUnmounted(() => clearInterval(tickInterval))
+
 const liveText = computed(() => {
   if (!sessionStore.micActive || sessionStore.isMuted) return ''
   const all = segments.value; return all.length ? all[all.length - 1].originalText ?? '' : ''
@@ -378,19 +427,22 @@ const liveText = computed(() => {
 
 const duration = computed(() => {
   if (!session.value?.startedAt) return '—'
-  const ms = Date.now() - new Date(session.value.startedAt).getTime()
+  const ms = now.value - new Date(session.value.startedAt).getTime()
   return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`
 })
 
 const micStatusTextClass = computed(() => !sessionStore.micActive ? 'text-disabled' : sessionStore.isMuted ? 'text-warning' : 'text-success font-weight-bold')
 const micStatusLabel = computed(() => !sessionStore.micActive ? 'Microphone off' : sessionStore.isMuted ? 'Muted' : `Live — ${Math.round(sessionStore.audioLevel)}%`)
 
-onMounted(() => { sessionStore.setActiveSession(sessionId); if (session.value?.status === 'ACTIVE') { wsStatus.value = 'CONNECTED'; startSim() } })
-onUnmounted(() => { stopSim(); stopMicHw(); sessionStore.setActiveSession(null); endDrag() })
+onMounted(() => {
+  sessionStore.setActiveSession(sessionId)
+  if (session.value?.status === 'ACTIVE') { wsConnect(); startSim() }
+})
+onUnmounted(() => { stopSim(); stopMicHw(); wsDisconnect(); sessionStore.setActiveSession(null); endDrag() })
 watch(() => session.value?.status, (s) => {
-  if (s === 'ACTIVE') { wsStatus.value = 'CONNECTED'; startSim() }
-  else if (s === 'PAUSED') { wsStatus.value = 'CONNECTED'; stopSim() }
-  else if (s === 'ENDED') { wsStatus.value = 'DISCONNECTED'; stopSim(); stopMicHw() }
+  if (s === 'ACTIVE') { wsConnect(); startSim() }
+  else if (s === 'PAUSED') { stopSim() }
+  else if (s === 'ENDED') { wsDisconnect(); stopSim(); stopMicHw() }
 })
 
 async function startMic() { micLoading.value = true; await requestMic(); micLoading.value = false }
