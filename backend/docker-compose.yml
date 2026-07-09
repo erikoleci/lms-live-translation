@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: zana_live
+      POSTGRES_USER: zana
+      POSTGRES_PASSWORD: zana
+    ports:
+      - "5432:5432"
+    volumes:
+      - zana_pg_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  zana_pg_data:
