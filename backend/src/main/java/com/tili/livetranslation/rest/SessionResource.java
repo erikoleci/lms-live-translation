@@ -29,7 +29,7 @@ public class SessionResource {
     @POST
     @Transactional
     public Response create(@Valid CreateSessionRequest req) {
-        String teacherId = identity.getPrincipal().getName();
+        String teacherId = currentTeacherId();
         LiveSession session = sessionService.createSession(teacherId, req);
         long count = sessionService.activeParticipantCount(session.id);
         return Response.status(Response.Status.CREATED)
@@ -40,7 +40,7 @@ public class SessionResource {
     @GET
     public List<SessionResponse> list(@QueryParam("courseId") String courseId,
                                        @QueryParam("status") String status) {
-        String teacherId = identity.getPrincipal().getName();
+        String teacherId = currentTeacherId();
         String query = "teacherId = ?1";
         List<Object> params = new java.util.ArrayList<>(List.of(teacherId));
         int idx = 2;
@@ -113,5 +113,15 @@ public class SessionResource {
                 session.targetLanguageList(), session.status.name(), session.accessMode.name(),
                 session.accessMode.name().equals("CLOSED"), count, session.maxParticipants
         );
+    }
+
+    /**
+     * Resolves the calling teacher's identity, falling back to a stable
+     * "dev-teacher" id when running without a real OIDC identity (dev/test
+     * profile, see application.properties) instead of throwing on
+     * identity.getPrincipal() == null.
+     */
+    private String currentTeacherId() {
+        return identity.isAnonymous() ? "dev-teacher" : identity.getPrincipal().getName();
     }
 }
