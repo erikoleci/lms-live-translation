@@ -51,8 +51,11 @@ public class TeacherAudioSocket {
     @Inject
     SessionService sessionService;
 
+    /** Binds an open provider-side STT session to the exact provider instance that created it. */
+    private record ActiveStt(SpeechToTextProvider provider, SttSessionRef ref) {}
+
     /** Tracks the open provider-side STT session per WebSocket connection id. */
-    private final Map<String, SttSessionRef> activeSttSessions = new ConcurrentHashMap<>();
+    private final Map<String, ActiveStt> activeSttSessions = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen() {
@@ -67,7 +70,7 @@ public class TeacherAudioSocket {
                 "OPUS_WEBM",
                 48000
         ));
-        activeSttSessions.put(connection.id(), ref);
+        activeSttSessions.put(connection.id(), new ActiveStt(stt, ref));
 
         stt.onPartialTranscript(ref, event -> transcriptService.recordSegment(
                 sessionId, resolveLanguage(session, event.detectedLanguage()), event.text(),
@@ -80,16 +83,19 @@ public class TeacherAudioSocket {
 
     @OnBinaryMessage
     public void onAudioChunk(Buffer chunk) {
-        SttSessionRef ref = activeSttSessions.get(connection.id());
-        if (ref == null) return; // connection not fully initialized yet, or already closed
-        providerRegistry.resolveStt().sendAudioChunk(ref, chunk.getBytes());
+        ActiveStt active = activeSttSessions.get(connection.id());
+        if (active == null) return; // connection not fully initialized yet, or already closed
+        // Reuse the provider instance bound at session start -- resolveStt() can return a
+        // different provider mid-session if the admin changes the enabled STT config, which
+        // would otherwise route audio to a provider that never opened this ref.
+        active.provider().sendAudioChunk(active.ref(), chunk.getBytes());
     }
 
     @OnClose
     public void onClose() {
-        SttSessionRef ref = activeSttSessions.remove(connection.id());
-        if (ref != null) {
-            providerRegistry.resolveStt().closeSession(ref);
+        ActiveStt active = activeSttSessions.remove(connection.id());
+        if (active != null) {
+            active.provider().closeSession(active.ref());
         }
         UUID sessionId = UUID.fromString(connection.pathParam("sessionId"));
         transcriptService.resetSequenceCounter(sessionId);

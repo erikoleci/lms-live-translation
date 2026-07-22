@@ -47,6 +47,9 @@ public class StudentSocket {
         Set<String> ids = sessionConnections.get(sessionId);
         if (ids != null) {
             ids.remove(connection.id());
+            // Drop the map entry once a session has no more listeners, otherwise
+            // sessionConnections grows forever across the app's lifetime.
+            sessionConnections.computeIfPresent(sessionId, (id, remaining) -> remaining.isEmpty() ? null : remaining);
         }
     }
 
