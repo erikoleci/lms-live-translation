@@ -11,8 +11,8 @@ import java.util.concurrent.CompletionStage;
 @ApplicationScoped
 public class OpenAiTranslationProvider implements TranslationProvider {
 
-    @ConfigProperty(name = "zana.provider.openai.api-key", defaultValue = "")
-    String apiKey;
+    // NOTE: apiKey will be re-added via @ConfigProperty once the real OpenAI
+    // chat/completions wiring below is implemented (see TODO).
 
     @Override
     public String code() {

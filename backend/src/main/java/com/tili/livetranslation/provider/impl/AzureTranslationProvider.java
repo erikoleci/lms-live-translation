@@ -11,8 +11,8 @@ import java.util.concurrent.CompletionStage;
 @ApplicationScoped
 public class AzureTranslationProvider implements TranslationProvider {
 
-    @ConfigProperty(name = "zana.provider.azure.api-key", defaultValue = "")
-    String apiKey;
+    // NOTE: apiKey will be re-added via @ConfigProperty once the real Azure
+    // Translator REST wiring below is implemented (see TODO).
 
     @Override
     public String code() {

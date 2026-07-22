@@ -12,8 +12,8 @@ import java.util.concurrent.SubmissionPublisher;
 @ApplicationScoped
 public class OpenAiTextToSpeechProvider implements TextToSpeechProvider {
 
-    @ConfigProperty(name = "zana.provider.openai.api-key", defaultValue = "")
-    String apiKey;
+    // NOTE: apiKey will be re-added via @ConfigProperty once the real OpenAI
+    // TTS wiring below is implemented (see TODOs).
 
     @Override
     public String code() {

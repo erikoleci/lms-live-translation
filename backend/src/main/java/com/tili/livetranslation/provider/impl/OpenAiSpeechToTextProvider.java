@@ -16,13 +16,12 @@ import java.util.function.Consumer;
  * plumbing to platform.openai.com is intentionally left as a TODO wired point
  * so the rest of the pipeline (SessionAudioBridge, TranscriptService,
  * broadcasting) can be built and tested against it independently of any
- * specific vendor SDK version.
+ * specific vendor SDK version. apiKey will be re-added via @ConfigProperty
+ * once that wiring lands.
  */
 @ApplicationScoped
 public class OpenAiSpeechToTextProvider implements SpeechToTextProvider {
 
-    @ConfigProperty(name = "zana.provider.openai.api-key", defaultValue = "")
-    String apiKey;
 
     private final Map<String, Consumer<TranscriptEvent>> partialCallbacks = new ConcurrentHashMap<>();
     private final Map<String, Consumer<TranscriptEvent>> finalCallbacks = new ConcurrentHashMap<>();

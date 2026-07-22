@@ -12,8 +12,8 @@ import java.util.concurrent.SubmissionPublisher;
 @ApplicationScoped
 public class AzureTextToSpeechProvider implements TextToSpeechProvider {
 
-    @ConfigProperty(name = "zana.provider.azure.api-key", defaultValue = "")
-    String apiKey;
+    // NOTE: apiKey will be re-added via @ConfigProperty once the real Azure
+    // Neural TTS wiring below is implemented (see TODOs).
 
     @Override
     public String code() {
