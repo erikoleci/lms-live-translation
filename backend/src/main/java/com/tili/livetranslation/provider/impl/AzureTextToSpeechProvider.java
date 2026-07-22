@@ -12,7 +12,7 @@ import java.util.concurrent.SubmissionPublisher;
 @ApplicationScoped
 public class AzureTextToSpeechProvider implements TextToSpeechProvider {
 
-    @ConfigProperty(name = "zana.provider.azure.api-key")
+    @ConfigProperty(name = "zana.provider.azure.api-key", defaultValue = "")
     String apiKey;
 
     @Override

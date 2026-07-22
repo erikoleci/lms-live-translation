@@ -11,10 +11,10 @@ import java.util.function.Consumer;
 @ApplicationScoped
 public class AzureSpeechToTextProvider implements SpeechToTextProvider {
 
-    @ConfigProperty(name = "zana.provider.azure.api-key")
+    @ConfigProperty(name = "zana.provider.azure.api-key", defaultValue = "")
     String apiKey;
 
-    @ConfigProperty(name = "zana.provider.azure.region")
+    @ConfigProperty(name = "zana.provider.azure.region", defaultValue = "westeurope")
     String region;
 
     @Override

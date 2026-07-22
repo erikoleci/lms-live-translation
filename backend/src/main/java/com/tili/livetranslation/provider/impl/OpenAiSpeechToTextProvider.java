@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 @ApplicationScoped
 public class OpenAiSpeechToTextProvider implements SpeechToTextProvider {
 
-    @ConfigProperty(name = "zana.provider.openai.api-key")
+    @ConfigProperty(name = "zana.provider.openai.api-key", defaultValue = "")
     String apiKey;
 
     private final Map<String, Consumer<TranscriptEvent>> partialCallbacks = new ConcurrentHashMap<>();

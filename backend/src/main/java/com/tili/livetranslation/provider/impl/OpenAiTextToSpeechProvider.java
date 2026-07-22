@@ -12,7 +12,7 @@ import java.util.concurrent.SubmissionPublisher;
 @ApplicationScoped
 public class OpenAiTextToSpeechProvider implements TextToSpeechProvider {
 
-    @ConfigProperty(name = "zana.provider.openai.api-key")
+    @ConfigProperty(name = "zana.provider.openai.api-key", defaultValue = "")
     String apiKey;
 
     @Override
