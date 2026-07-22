@@ -18,9 +18,10 @@ services:
                      # OIDC_URL/OIDC_CLIENT_ID/OIDC_CLIENT_SECRET before going live
                      # with real students.
       - key: DB_URL
-        fromDatabase:
-          name: zana-live-db
-          property: connectionString
+        sync: false   # Render's auto-linked connectionString lacks the "jdbc:" prefix the
+                       # Java driver requires. Set this manually in the dashboard instead:
+                       # take the database's "Internal Database URL" and prepend "jdbc:",
+                       # e.g. jdbc:postgresql://zana:PASSWORD@dpg-xxxx-a/zana_live
       - key: DB_USER
         fromDatabase:
           name: zana-live-db
