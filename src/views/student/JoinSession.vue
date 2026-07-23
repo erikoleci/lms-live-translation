@@ -123,9 +123,9 @@
       <v-card rounded="xl">
         <v-card-text class="pa-8 text-center">
           <v-icon size="56" color="error" class="mb-4">mdi-alert-circle-outline</v-icon>
-          <h3 class="text-h6 font-weight-bold mb-2">Kod i gabuar</h3>
+          <h3 class="text-h6 font-weight-bold mb-2">Sesioni ka përfunduar</h3>
           <p class="text-body-2 text-medium-emphasis">
-            Nuk u gjet asnjë sesion aktiv me kodin <strong>{{ form.code }}</strong>. Kontrolloni kodin dhe provoni sërish.
+            Sesioni me kodin <strong>{{ form.code }}</strong> ka përfunduar ose ka skaduar, ose kodi është i gabuar. Kontrolloni kodin ose kërkoni mësuesin për një kod të ri.
           </p>
         </v-card-text>
         <v-card-actions class="px-6 pb-6">
@@ -173,7 +173,7 @@ async function submit() {
   try {
     // Public lookup: resolves the join code to a session without requiring auth.
     const info = await sessionApi.joinInfoByCode(form.value.code.toUpperCase())
-    if (!['ACTIVE', 'PAUSED', 'WAITING'].includes(info.status)) {
+    if (['ENDED', 'FAILED', 'EXPIRED'].includes(info.status)) {
       joining.value = false; errorDialog.value = true; return
     }
     if (info.currentParticipants >= info.maxParticipants) {
