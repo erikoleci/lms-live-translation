@@ -15,8 +15,14 @@ const STT_LOCALE = { IT: 'it-IT', EN: 'en-US', SQ: 'sq-AL' }
  * No API key, no signup, works immediately — good enough to test the full
  * live-captioning flow end to end. Swap this out for real audio streaming
  * (see the backend README) once you're ready to pay for a cloud STT vendor.
+ *
+ * @param getSourceLanguage either a plain string or a function returning one
+ *   (e.g. `() => session.value?.sourceLanguage`) -- pass a function when the
+ *   session data may not be loaded yet at composable setup time, so the
+ *   actual value is read fresh when start() runs instead of being frozen
+ *   too early (which previously always fell back to the 'IT' default).
  */
-export function useBrowserStt(sessionId, sourceLanguage = 'IT') {
+export function useBrowserStt(sessionId, getSourceLanguage = 'IT') {
   const listening = ref(false)
   const error = ref(null)
   const supported = typeof window !== 'undefined'
@@ -24,6 +30,11 @@ export function useBrowserStt(sessionId, sourceLanguage = 'IT') {
 
   let recognition = null
   let socket = null
+  let sourceLanguage = 'IT'
+
+  function resolveSourceLanguage() {
+    return (typeof getSourceLanguage === 'function' ? getSourceLanguage() : getSourceLanguage) || 'IT'
+  }
 
   function connectSocket() {
     socket = new WebSocket(wsUrl(`/ws/sessions/${sessionId}/teacher-text`))
@@ -41,6 +52,7 @@ export function useBrowserStt(sessionId, sourceLanguage = 'IT') {
       error.value = 'Speech recognition is only available in Chrome/Edge right now.'
       return
     }
+    sourceLanguage = resolveSourceLanguage()
     connectSocket()
 
     const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition

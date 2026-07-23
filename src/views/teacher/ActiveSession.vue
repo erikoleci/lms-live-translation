@@ -336,7 +336,7 @@ const { requestMic, stopMic: stopMicHw, error: micError } = useAudio()
 const session = computed(() => sessionStore.getSession(sessionId))
 const {
   start: startStt, stop: stopStt, error: sttError, supported: sttSupported,
-} = useBrowserStt(sessionId, session.value?.sourceLanguage ?? 'IT')
+} = useBrowserStt(sessionId, () => session.value?.sourceLanguage)
 const segments = computed(() => sessionStore.getTranscript(sessionId))
 const actionLoading = ref(false)
 const micLoading = ref(false)
