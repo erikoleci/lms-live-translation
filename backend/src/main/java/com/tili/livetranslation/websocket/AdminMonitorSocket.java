@@ -32,34 +32,41 @@ public class AdminMonitorSocket {
     @Inject
     ObjectMapper objectMapper;
 
-    private final Map<UUID, Set<String>> sessionConnections = new ConcurrentHashMap<>();
+    // See StudentSocket for why we store actual WebSocketConnection objects
+    // (captured during onOpen, while the WS context is valid) rather than ids
+    // resolved later via connection.getOpenConnections() -- broadcast() is
+    // called from plain REST-request threads with no active WS context.
+    private final Map<UUID, Set<WebSocketConnection>> sessionConnections = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen() {
         UUID sessionId = UUID.fromString(connection.pathParam("sessionId"));
         sessionConnections
                 .computeIfAbsent(sessionId, id -> new CopyOnWriteArraySet<>())
-                .add(connection.id());
+                .add(connection);
     }
 
     @OnClose
     public void onClose() {
         UUID sessionId = UUID.fromString(connection.pathParam("sessionId"));
-        Set<String> ids = sessionConnections.get(sessionId);
-        if (ids != null) ids.remove(connection.id());
+        Set<WebSocketConnection> conns = sessionConnections.get(sessionId);
+        if (conns != null) {
+            conns.remove(connection);
+            sessionConnections.computeIfPresent(sessionId, (id, remaining) -> remaining.isEmpty() ? null : remaining);
+        }
     }
 
     public void broadcast(UUID sessionId, WsEvent event) {
-        Set<String> ids = sessionConnections.get(sessionId);
-        if (ids == null || ids.isEmpty()) return;
+        Set<WebSocketConnection> conns = sessionConnections.get(sessionId);
+        if (conns == null || conns.isEmpty()) return;
         String json;
         try {
             json = objectMapper.writeValueAsString(event);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize admin monitor event", e);
         }
-        connection.getOpenConnections().stream()
-                .filter(c -> ids.contains(c.id()))
-                .forEach(c -> c.sendTextAndAwait(json));
+        conns.forEach(c -> {
+            if (c.isOpen()) c.sendTextAndAwait(json);
+        });
     }
 }

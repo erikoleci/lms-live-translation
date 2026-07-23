@@ -30,23 +30,29 @@ public class StudentSocket {
     @Inject
     WebSocketConnection connection;
 
-    // sessionId -> set of connection ids currently subscribed
-    private final Map<UUID, Set<String>> sessionConnections = new ConcurrentHashMap<>();
+    // sessionId -> set of connections currently subscribed. We capture the actual
+    // WebSocketConnection object here (during onOpen, while the WS context is valid)
+    // instead of just an id, because broadcast() is called from plain REST-request
+    // threads (e.g. teacher clicks Start/Pause/End) where there is no active
+    // WebSocket connection context -- calling connection.getOpenConnections() from
+    // there throws, since the injected `connection` field only resolves inside a
+    // live WS callback (onOpen/onClose/onMessage) of that same connection.
+    private final Map<UUID, Set<WebSocketConnection>> sessionConnections = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen() {
         UUID sessionId = UUID.fromString(connection.pathParam("sessionId"));
         sessionConnections
                 .computeIfAbsent(sessionId, id -> new CopyOnWriteArraySet<>())
-                .add(connection.id());
+                .add(connection);
     }
 
     @OnClose
     public void onClose() {
         UUID sessionId = UUID.fromString(connection.pathParam("sessionId"));
-        Set<String> ids = sessionConnections.get(sessionId);
-        if (ids != null) {
-            ids.remove(connection.id());
+        Set<WebSocketConnection> conns = sessionConnections.get(sessionId);
+        if (conns != null) {
+            conns.remove(connection);
             // Drop the map entry once a session has no more listeners, otherwise
             // sessionConnections grows forever across the app's lifetime.
             sessionConnections.computeIfPresent(sessionId, (id, remaining) -> remaining.isEmpty() ? null : remaining);
@@ -63,12 +69,12 @@ public class StudentSocket {
     ObjectMapper objectMapper;
 
     public void broadcast(UUID sessionId, WsEvent event) {
-        Set<String> ids = sessionConnections.get(sessionId);
-        if (ids == null || ids.isEmpty()) return;
+        Set<WebSocketConnection> conns = sessionConnections.get(sessionId);
+        if (conns == null || conns.isEmpty()) return;
         String json = toJson(event);
-        connection.getOpenConnections().stream()
-                .filter(c -> ids.contains(c.id()))
-                .forEach(c -> c.sendTextAndAwait(json));
+        conns.forEach(c -> {
+            if (c.isOpen()) c.sendTextAndAwait(json);
+        });
     }
 
     private String toJson(WsEvent event) {
