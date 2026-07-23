@@ -115,7 +115,7 @@
                 v-if="!sessionStore.micActive"
                 color="success" variant="flat" size="large"
                 class="flex-grow-1" prepend-icon="mdi-microphone"
-                :disabled="session.status !== 'ACTIVE'"
+                :disabled="['ENDED', 'FAILED', 'EXPIRED'].includes(session.status)"
                 :loading="micLoading"
                 @click="startMic"
               >Start</v-btn>
