@@ -131,6 +131,9 @@
               </template>
             </div>
             <v-alert v-if="micError" type="error" density="compact" variant="tonal" rounded="lg" class="mt-2 text-caption">{{ micError }}</v-alert>
+            <v-alert v-if="sttError" type="warning" density="compact" variant="tonal" rounded="lg" class="mt-2 text-caption">
+              {{ sttError }} Captions won't appear until this is resolved — try Chrome or Edge, and check your source language is supported by your browser's speech engine.
+            </v-alert>
           </v-card-text>
         </v-card>
 
