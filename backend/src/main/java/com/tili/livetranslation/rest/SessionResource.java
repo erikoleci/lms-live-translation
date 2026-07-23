@@ -67,6 +67,7 @@ public class SessionResource {
 
     @PATCH
     @Path("/{sessionId}")
+    @Transactional
     public SessionResponse update(@PathParam("sessionId") UUID sessionId, SessionUpdateRequest req) {
         LiveSession session = sessionService.updateSession(sessionId, req);
         return SessionResponse.from(session, sessionService.activeParticipantCount(sessionId));
@@ -74,6 +75,7 @@ public class SessionResource {
 
     @DELETE
     @Path("/{sessionId}")
+    @Transactional
     public Response delete(@PathParam("sessionId") UUID sessionId) {
         sessionService.deleteSession(sessionId);
         return Response.noContent().build();
@@ -81,6 +83,7 @@ public class SessionResource {
 
     @PATCH
     @Path("/{sessionId}/state")
+    @Transactional
     public SessionResponse changeState(@PathParam("sessionId") UUID sessionId,
                                         @Valid SessionStateUpdateRequest req) {
         LiveSession session = sessionService.changeState(sessionId, SessionState.valueOf(req.state()));

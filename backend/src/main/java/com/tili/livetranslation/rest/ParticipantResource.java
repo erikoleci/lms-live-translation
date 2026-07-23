@@ -7,6 +7,7 @@ import com.tili.livetranslation.dto.ParticipantUpdateRequest;
 import com.tili.livetranslation.service.ParticipantService;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -27,6 +28,7 @@ public class ParticipantResource {
     SecurityIdentity identity;
 
     @POST
+    @Transactional
     public Response join(@PathParam("sessionId") UUID sessionId, @Valid JoinRequest req) {
         String authenticatedUserId = identity.isAnonymous() ? null : identity.getPrincipal().getName();
         LiveParticipant participant = participantService.join(sessionId, authenticatedUserId, req);
@@ -48,6 +50,7 @@ public class ParticipantResource {
     }
 
     @PATCH
+    @Transactional
     @Path("/{participantId}")
     public ParticipantResponse update(@PathParam("sessionId") UUID sessionId,
                                        @PathParam("participantId") UUID participantId,
@@ -56,6 +59,7 @@ public class ParticipantResource {
     }
 
     @DELETE
+    @Transactional
     @Path("/{participantId}")
     public Response leave(@PathParam("sessionId") UUID sessionId,
                            @PathParam("participantId") UUID participantId) {

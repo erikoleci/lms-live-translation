@@ -5,6 +5,7 @@ import com.tili.livetranslation.dto.ProviderConfigResponse;
 import com.tili.livetranslation.service.ProviderConfigService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -24,6 +25,7 @@ public class AiProviderResource {
     ProviderConfigService providerConfigService;
 
     @POST
+    @Transactional
     public Response create(@Valid ProviderConfigRequest req) {
         var created = providerConfigService.create(req);
         return Response.status(Response.Status.CREATED)
@@ -43,12 +45,14 @@ public class AiProviderResource {
     }
 
     @PATCH
+    @Transactional
     @Path("/{providerId}")
     public ProviderConfigResponse update(@PathParam("providerId") UUID providerId, ProviderConfigRequest req) {
         return ProviderConfigResponse.from(providerConfigService.update(providerId, req));
     }
 
     @DELETE
+    @Transactional
     @Path("/{providerId}")
     public Response disable(@PathParam("providerId") UUID providerId) {
         providerConfigService.disable(providerId);
