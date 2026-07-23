@@ -459,7 +459,15 @@ watch(() => session.value?.status, (s) => {
 async function startMic() {
   micLoading.value = true
   const ok = await requestMic()
-  if (ok) startStt()
+  if (ok) {
+    startStt()
+    // Opening the mic IS starting the session now -- no separate manual
+    // Start click needed. Only transition if not already active/ended, so
+    // resuming after a pause doesn't error on an invalid transition.
+    if (session.value && !['ACTIVE', 'ENDED', 'EXPIRED', 'FAILED'].includes(session.value.status)) {
+      await changeState('ACTIVE')
+    }
+  }
   micLoading.value = false
 }
 function stopMic() {
@@ -467,6 +475,10 @@ function stopMic() {
   stopStt()
   sessionStore.setMicActive(false)
   sessionStore.setAudioLevel(0)
+  // Closing the mic ends the session -- mirrors startMic's auto-start.
+  if (session.value && !['ENDED', 'EXPIRED', 'FAILED'].includes(session.value.status)) {
+    changeState('ENDED')
+  }
 }
 
 async function changeState(newState) {

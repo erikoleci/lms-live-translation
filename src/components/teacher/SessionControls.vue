@@ -1,11 +1,11 @@
 <template>
   <div class="session-controls">
     <div class="d-flex flex-column gap-2">
-      <v-btn
+      <v-alert
         v-if="status === 'WAITING' || status === 'CREATED'"
-        color="success" variant="flat" block prepend-icon="mdi-broadcast"
-        :loading="loading" @click="emit('start')"
-      >Start Session</v-btn>
+        type="info" variant="tonal" rounded="lg" density="compact"
+        icon="mdi-microphone"
+      >Open the microphone above to start the session.</v-alert>
 
       <div v-if="status === 'ACTIVE' || status === 'PAUSED'" class="d-flex gap-2">
         <v-btn
