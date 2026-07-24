@@ -25,6 +25,24 @@
             <strong>{{ session.participantCount }}</strong>
             <span class="text-disabled">/ {{ session.maxParticipants }}</span>
           </span>
+          <v-btn
+            v-if="!sessionStore.micActive"
+            size="small" rounded="lg" color="success" variant="flat"
+            :disabled="['ENDED', 'FAILED', 'EXPIRED'].includes(session.status)"
+            :loading="micLoading"
+            @click="startMic"
+          >
+            <v-icon size="16" :start="!smAndDown">mdi-microphone</v-icon>
+            <span class="d-none d-sm-inline">Start</span>
+          </v-btn>
+          <v-btn
+            v-else
+            size="small" rounded="lg" color="error" variant="tonal"
+            @click="stopMic"
+          >
+            <v-icon size="16" :start="!smAndDown">mdi-stop</v-icon>
+            <span class="d-none d-sm-inline">Stop</span>
+          </v-btn>
           <ConnectionStatus :status="wsStatus" />
           <v-btn
             size="small" rounded="lg"
