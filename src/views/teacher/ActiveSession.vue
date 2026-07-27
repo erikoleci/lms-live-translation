@@ -1,10 +1,10 @@
 <template>
-  <v-layout v-if="session">
+  <v-layout v-if="session" :class="{ 'zana-high-contrast': uiStore.highContrastMode }">
 
     <!-- APP BAR -->
     <v-app-bar flat border="b" height="56" density="compact">
-      <v-app-bar-nav-icon v-if="smAndDown" @click="sidebarOpen = !sidebarOpen" />
-      <v-btn v-else icon="mdi-arrow-left" variant="text" to="/teacher" />
+      <v-app-bar-nav-icon v-if="smAndDown" @click="sidebarOpen = !sidebarOpen" aria-label="Hap menunë" />
+      <v-btn v-else icon="mdi-arrow-left" variant="text" to="/teacher" aria-label="Kthehu te dashboard-i" />
 
       <v-avatar size="28" rounded="lg" class="ml-1 mr-2">
         <v-img src="/zana.png" alt="ZANA" cover />
@@ -30,6 +30,7 @@
             size="small" rounded="lg" color="success" variant="flat"
             :disabled="['ENDED', 'FAILED', 'EXPIRED'].includes(session.status)"
             :loading="micLoading"
+            aria-label="Nis mikrofonin"
             @click="startMic"
           >
             <v-icon size="16" :start="!smAndDown">mdi-microphone</v-icon>
@@ -38,6 +39,7 @@
           <v-btn
             v-else
             size="small" rounded="lg" color="error" variant="tonal"
+            aria-label="Ndalo mikrofonin"
             @click="stopMic"
           >
             <v-icon size="16" :start="!smAndDown">mdi-stop</v-icon>
@@ -48,6 +50,7 @@
             size="small" rounded="lg"
             :color="qrFloat ? 'primary' : 'default'"
             :variant="qrFloat ? 'flat' : 'tonal'"
+            :aria-label="qrFloat ? 'Fshih kodin QR' : 'Shfaq kodin QR'"
             @click="qrFloat = !qrFloat"
           >
             <v-icon size="16" :start="!smAndDown">mdi-qrcode</v-icon>
@@ -58,6 +61,7 @@
               <v-btn
                 size="small" variant="tonal" rounded="lg"
                 :disabled="!segments.length"
+                aria-label="Shkarko transkriptin"
                 v-bind="menuProps"
               >
                 <v-icon size="16" :start="!smAndDown">mdi-download</v-icon>
@@ -73,7 +77,14 @@
           <v-btn
             :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
             variant="text" size="small"
+            :aria-label="uiStore.darkMode ? 'Kalo në temë të çelët' : 'Kalo në temë të errët'"
             @click="uiStore.toggleDarkMode()"
+          />
+          <v-btn
+            icon="mdi-contrast-circle"
+            variant="text" size="small"
+            :aria-label="uiStore.highContrastMode ? 'Çaktivizo kontrastin e lartë' : 'Aktivizo kontrastin e lartë'"
+            @click="uiStore.toggleHighContrast()"
           />
         </div>
       </template>
@@ -145,7 +156,7 @@
                   :prepend-icon="sessionStore.isMuted ? 'mdi-microphone-off' : 'mdi-pause'"
                   @click="sessionStore.toggleMute()"
                 >{{ sessionStore.isMuted ? 'Unmute' : 'Pause' }}</v-btn>
-                <v-btn color="error" variant="tonal" size="large" icon="mdi-stop" @click="stopMic" />
+                <v-btn color="error" variant="tonal" size="large" icon="mdi-stop" @click="stopMic" aria-label="Ndalo mikrofonin" />
               </template>
             </div>
             <v-alert v-if="micError" type="error" density="compact" variant="tonal" rounded="lg" class="mt-2 text-caption">{{ micError }}</v-alert>
@@ -243,7 +254,7 @@
         <span class="text-caption text-disabled mr-2">{{ segments.length }} segments</span>
         <v-menu>
           <template #activator="{ props: menuProps }">
-            <v-btn icon="mdi-download" size="x-small" variant="text" :disabled="!segments.length" v-bind="menuProps" class="mr-1" />
+            <v-btn icon="mdi-download" size="x-small" variant="text" :disabled="!segments.length" v-bind="menuProps" class="mr-1" aria-label="Shkarko transkriptin" />
           </template>
           <v-list density="compact" rounded="lg">
             <v-list-item prepend-icon="mdi-file-document-outline" title="Export .txt" @click="downloadTranscript('txt')" />
@@ -296,8 +307,8 @@
       <v-toolbar flat density="compact" color="primary-lighten-5" border="b" rounded="t-xl">
         <v-icon size="14" color="primary" class="ml-2">mdi-qrcode</v-icon>
         <v-toolbar-title class="text-caption font-weight-bold ml-1">Join — {{ session.joinCode }}</v-toolbar-title>
-        <v-btn icon="mdi-minus" size="x-small" variant="text" @click.stop="qrMinimized = !qrMinimized" />
-        <v-btn icon="mdi-close" size="x-small" variant="text" @click.stop="qrFloat = false" class="mr-1" />
+        <v-btn icon="mdi-minus" size="x-small" variant="text" @click.stop="qrMinimized = !qrMinimized" aria-label="Minimizo dritaren e QR" />
+        <v-btn icon="mdi-close" size="x-small" variant="text" @click.stop="qrFloat = false" class="mr-1" aria-label="Mbyll dritaren e QR" />
       </v-toolbar>
 
       <v-card-text v-if="!qrMinimized" class="d-flex flex-column align-center pa-4 gap-3">

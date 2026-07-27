@@ -1,5 +1,5 @@
 <template>
-  <v-layout style="height:100vh; overflow:hidden">
+  <v-layout style="height:100vh; overflow:hidden" :class="{ 'zana-high-contrast': uiStore.highContrastMode }">
 
     <!-- APP BAR -->
     <v-app-bar flat border="b" height="60" density="compact" color="surface">
@@ -20,7 +20,7 @@
         <div class="d-flex align-center gap-1 pr-2">
 
           <!-- Language switcher — i madh dhe i qartë -->
-          <div class="d-flex gap-1">
+          <div class="d-flex gap-1" role="group" aria-label="Zgjedh gjuhën e shfaqjes">
             <v-btn
               v-for="lang in availableLangs"
               :key="lang.value"
@@ -29,9 +29,11 @@
               size="small"
               rounded="lg"
               class="px-2"
+              :aria-label="`Shfaq caption-et në ${lang.shortLabel}`"
+              :aria-pressed="selectedLanguage === lang.value"
               @click="selectedLanguage = lang.value"
             >
-              <span style="font-size:16px">{{ lang.flag }}</span>
+              <span style="font-size:16px" aria-hidden="true">{{ lang.flag }}</span>
               <span class="d-none d-sm-inline ml-1 text-caption font-weight-bold">{{ lang.shortLabel }}</span>
             </v-btn>
           </div>
@@ -40,17 +42,32 @@
 
           <!-- Font size -->
           <v-btn icon="mdi-format-font-size-decrease" size="small" variant="text"
+            aria-label="Zvogëlo madhësinë e shkrimit"
             @click="uiStore.setCaptionFontSize(uiStore.captionFontSize - 2)" />
           <v-btn icon="mdi-format-font-size-increase" size="small" variant="text"
+            aria-label="Zmadho madhësinë e shkrimit"
             @click="uiStore.setCaptionFontSize(uiStore.captionFontSize + 2)" />
 
           <v-btn
             :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-            variant="text" size="small" @click="uiStore.toggleDarkMode()" />
+            variant="text" size="small" @click="uiStore.toggleDarkMode()"
+            :aria-label="uiStore.darkMode ? 'Kalo në temë të çelët' : 'Kalo në temë të errët'" />
 
-          <v-btn icon="mdi-cog-outline" variant="tonal" size="small" @click="showSettings = !showSettings" />
+          <v-btn icon="mdi-contrast-circle" variant="text" size="small"
+            @click="uiStore.toggleHighContrast()"
+            :aria-label="uiStore.highContrastMode ? 'Çaktivizo kontrastin e lartë' : 'Aktivizo kontrastin e lartë'" />
 
-          <v-btn icon="mdi-exit-to-app" variant="tonal" size="small" color="error" @click="leave" />
+          <v-btn
+            v-if="session?.studentTranscriptDownloadEnabled"
+            icon="mdi-download" variant="text" size="small"
+            aria-label="Shkarko transkriptin (.txt)"
+            @click="downloadTranscript" />
+
+          <v-btn icon="mdi-cog-outline" variant="tonal" size="small" @click="showSettings = !showSettings"
+            aria-label="Hap cilësimet" />
+
+          <v-btn icon="mdi-exit-to-app" variant="tonal" size="small" color="error" @click="leave"
+            aria-label="Largohu nga sesioni" />
         </div>
       </template>
     </v-app-bar>
@@ -60,7 +77,7 @@
       <v-list-item class="py-4">
         <v-list-item-title class="text-body-1 font-weight-bold">Cilësimet</v-list-item-title>
         <template #append>
-          <v-btn icon="mdi-close" size="small" variant="text" @click="showSettings = false" />
+          <v-btn icon="mdi-close" size="small" variant="text" @click="showSettings = false" aria-label="Mbyll cilësimet" />
         </template>
       </v-list-item>
       <v-divider />
@@ -155,7 +172,7 @@
         <v-list-item class="py-4">
           <v-list-item-title class="text-body-1 font-weight-bold">Cilësimet</v-list-item-title>
           <template #append>
-            <v-btn icon="mdi-close" size="small" variant="text" @click="showSettings = false" />
+            <v-btn icon="mdi-close" size="small" variant="text" @click="showSettings = false" aria-label="Mbyll cilësimet" />
           </template>
         </v-list-item>
         <v-divider />
@@ -247,6 +264,21 @@ function leave() {
   const p = participantStore.currentParticipant
   if (p) participantStore.leaveSession(sessionId, p.id)
   router.push('/student/join')
+}
+
+function downloadTranscript() {
+  if (!session.value?.studentTranscriptDownloadEnabled) return
+  const lines = segments.value
+    .map((seg) => {
+      const tr = seg.translations?.find((t) => t.targetLanguage === selectedLanguage.value)
+      const translated = tr ? ` → ${tr.translatedText}` : ''
+      return `[${seg.sourceLanguage}] ${seg.originalText}${translated}`
+    })
+    .join('\n')
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([lines], { type: 'text/plain' }))
+  a.download = `transcript-${sessionId}.txt`
+  a.click()
 }
 
 // Keep the participant's local preferences in sync as they change settings.

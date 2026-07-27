@@ -13,7 +13,7 @@
             <div class="text-caption text-white opacity-80">Plotëso të dhënat e sesionit</div>
           </div>
           <v-spacer />
-          <v-btn icon="mdi-close" variant="text" color="white" @click="model = false" />
+          <v-btn icon="mdi-close" variant="text" color="white" @click="model = false" aria-label="Mbyll" />
         </div>
       </v-sheet>
 

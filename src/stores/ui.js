@@ -3,11 +3,16 @@ import { ref } from 'vue'
 
 export const useUiStore = defineStore('ui', () => {
   const darkMode = ref(false)
+  const highContrastMode = ref(false)
   const captionFontSize = ref(18)
   const navDrawer = ref(false)
 
   function toggleDarkMode() {
     darkMode.value = !darkMode.value
+  }
+
+  function toggleHighContrast() {
+    highContrastMode.value = !highContrastMode.value
   }
 
   function setCaptionFontSize(size) {
@@ -18,5 +23,8 @@ export const useUiStore = defineStore('ui', () => {
     navDrawer.value = !navDrawer.value
   }
 
-  return { darkMode, captionFontSize, navDrawer, toggleDarkMode, setCaptionFontSize, toggleNav }
-}, { persist: { pick: ['darkMode', 'captionFontSize'] } })
+  return {
+    darkMode, highContrastMode, captionFontSize, navDrawer,
+    toggleDarkMode, toggleHighContrast, setCaptionFontSize, toggleNav,
+  }
+}, { persist: { pick: ['darkMode', 'highContrastMode', 'captionFontSize'] } })

@@ -14,13 +14,15 @@ const DEMO_SESSIONS = [
   {
     id: 'demo-1', title: 'Machine Learning — Lecture 4', courseName: 'AI Fundamentals',
     sourceLanguage: 'IT', targetLanguages: ['EN', 'SQ'], status: 'ACTIVE',
-    joinCode: 'ML4X9K', accessMode: 'OPEN', participantCount: 12, maxParticipants: 60,
+    joinCode: 'ML4X9K', accessMode: 'OPEN', participantCount: 12, maxParticipants: 300,
+    recordingEnabled: false, studentTranscriptDownloadEnabled: true,
     startedAt: new Date(Date.now() - 12 * 60000).toISOString(), endedAt: null,
   },
   {
     id: 'demo-2', title: 'European History — Seminar 2', courseName: 'History 201',
     sourceLanguage: 'EN', targetLanguages: ['IT', 'SQ'], status: 'ENDED',
-    joinCode: 'HIS2A7', accessMode: 'OPEN', participantCount: 28, maxParticipants: 60,
+    joinCode: 'HIS2A7', accessMode: 'OPEN', participantCount: 28, maxParticipants: 300,
+    recordingEnabled: false, studentTranscriptDownloadEnabled: true,
     startedAt: new Date(Date.now() - 86400000).toISOString(),
     endedAt: new Date(Date.now() - 82800000).toISOString(),
   },
@@ -72,7 +74,9 @@ export const useSessionStore = defineStore('session', () => {
       joinCode: randomJoinCode(),
       accessMode: payload.accessMode || 'OPEN',
       participantCount: 0,
-      maxParticipants: payload.maxParticipants || 60,
+      maxParticipants: payload.maxParticipants || 300,
+      recordingEnabled: payload.recordingEnabled ?? false,
+      studentTranscriptDownloadEnabled: payload.studentTranscriptDownloadEnabled ?? true,
       startedAt: null,
       endedAt: null,
     }

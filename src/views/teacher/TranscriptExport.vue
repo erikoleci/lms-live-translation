@@ -1,7 +1,7 @@
 <template>
   <v-container class="pa-3 pa-sm-4 pa-md-6" max-width="900">
     <div class="d-flex align-center flex-wrap gap-3 mb-4 mb-sm-6">
-      <v-btn icon="mdi-arrow-left" variant="text" size="small" to="/teacher" class="mr-1" />
+      <v-btn icon="mdi-arrow-left" variant="text" size="small" to="/teacher" class="mr-1" aria-label="Kthehu" />
       <div class="flex-grow-1">
         <h1 class="text-h6 font-weight-bold">Session Transcript</h1>
         <p v-if="session" class="text-body-2 text-medium-emphasis">{{ session.title }}</p>
