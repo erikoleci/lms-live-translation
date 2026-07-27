@@ -337,11 +337,7 @@ import { useDisplay } from 'vuetify'
 import QrcodeVue from 'qrcode.vue'
 import { useSessionStore } from '../../stores/session.js'
 import { useUiStore } from '../../stores/ui.js'
-import { useAudio } from '../../composables/useAudio.js'
-import { useBrowserStt } from '../../composables/useBrowserStt.js'
-import { useLiveEvents } from '../../composables/useLiveEvents.js'
-import { sessionApi } from '../../services/sessionApi.js'
-import { apiErrorMessage } from '../../services/api.js'
+import { useSimulatedTranscript } from '../../composables/useSimulatedTranscript.js'
 import SessionControls from '../../components/teacher/SessionControls.vue'
 import StatusChip from '../../components/shared/StatusChip.vue'
 import ConnectionStatus from '../../components/shared/ConnectionStatus.vue'
@@ -353,19 +349,32 @@ const sessionStore = useSessionStore()
 const uiStore = useUiStore()
 
 const sessionId = route.params.id
-const { requestMic, stopMic: stopMicHw, error: micError } = useAudio()
 const session = computed(() => sessionStore.getSession(sessionId))
-const {
-  start: startStt, stop: stopStt, error: sttError, supported: sttSupported,
-} = useBrowserStt(sessionId, () => session.value?.sourceLanguage)
 const segments = computed(() => sessionStore.getTranscript(sessionId))
 const actionLoading = ref(false)
 const micLoading = ref(false)
 const sidebarOpen = ref(true)
+const micError = ref(null)
+const sttError = ref(null)
+const sttSupported = true
 
-// Live captions/translations/participant-count/status feed (spec 6.2).
-// Connects to WS /ws/sessions/{sessionId}/student — see useLiveEvents.js.
-const { status: wsStatus, connect: wsConnect, disconnect: wsDisconnect } = useLiveEvents(sessionId)
+// Demo-only live caption feed: generates realistic sample sentences and
+// translations on an interval so every screen looks and feels complete
+// without any real microphone, speech recognition, or backend involved.
+const { start: startStt, stop: stopStt } = useSimulatedTranscript(sessionId)
+
+// Fake audio-level meter animation while the mic is "on", purely visual.
+let levelInterval = null
+function startFakeLevel() {
+  levelInterval = setInterval(() => {
+    sessionStore.setAudioLevel(20 + Math.random() * 70)
+  }, 300)
+}
+function stopFakeLevel() {
+  if (levelInterval) { clearInterval(levelInterval); levelInterval = null }
+}
+
+const wsStatus = computed(() => (session.value?.status === 'ACTIVE' ? 'connected' : 'idle'))
 
 const qrFloat = ref(true)
 const qrMinimized = ref(false)
@@ -465,38 +474,27 @@ const micStatusLabel = computed(() => !sessionStore.micActive ? 'Microphone off'
 
 onMounted(() => {
   sessionStore.setActiveSession(sessionId)
-  if (!sessionStore.getSession(sessionId)) sessionStore.fetchSession(sessionId).catch(() => {})
-  sessionStore.fetchTranscript(sessionId).catch(() => {})
-  // Connect to the live event feed regardless of status: the teacher needs
-  // SESSION_STATUS_CHANGED even before the session goes ACTIVE (e.g. to see
-  // when the backend confirms the transition they just requested).
-  wsConnect()
 })
-onUnmounted(() => { stopMicHw(); stopStt(); wsDisconnect(); sessionStore.setActiveSession(null); endDrag() })
+onUnmounted(() => { stopFakeLevel(); stopStt(); sessionStore.setActiveSession(null); endDrag() })
 watch(() => session.value?.status, (s) => {
-  if (s === 'ENDED' || s === 'EXPIRED' || s === 'FAILED') { wsDisconnect(); stopMicHw(); stopStt() }
+  if (s === 'ENDED' || s === 'EXPIRED' || s === 'FAILED') { stopFakeLevel(); stopStt() }
 })
 
 async function startMic() {
   micLoading.value = true
-  const ok = await requestMic()
-  if (ok) {
-    startStt()
-    // Opening the mic IS starting the session now -- no separate manual
-    // Start click needed. Only transition if not already active/ended, so
-    // resuming after a pause doesn't error on an invalid transition.
-    if (session.value && !['ACTIVE', 'ENDED', 'EXPIRED', 'FAILED'].includes(session.value.status)) {
-      await changeState('ACTIVE')
-    }
+  sessionStore.setMicActive(true)
+  startFakeLevel()
+  startStt()
+  if (session.value && !['ACTIVE', 'ENDED', 'EXPIRED', 'FAILED'].includes(session.value.status)) {
+    await changeState('ACTIVE')
   }
   micLoading.value = false
 }
 function stopMic() {
-  stopMicHw()
+  stopFakeLevel()
   stopStt()
   sessionStore.setMicActive(false)
   sessionStore.setAudioLevel(0)
-  // Closing the mic ends the session -- mirrors startMic's auto-start.
   if (session.value && !['ENDED', 'EXPIRED', 'FAILED'].includes(session.value.status)) {
     changeState('ENDED')
   }
@@ -504,18 +502,12 @@ function stopMic() {
 
 async function changeState(newState) {
   actionLoading.value = true
-  try {
-    const updated = await sessionApi.changeState(sessionId, newState)
-    sessionStore.updateSessionStatus(sessionId, updated.status)
-  } catch (e) {
-    snack.value = { show: true, text: apiErrorMessage(e, 'Could not update session state.'), color: 'error' }
-  } finally {
-    actionLoading.value = false
-  }
+  sessionStore.updateSessionStatus(sessionId, newState)
+  actionLoading.value = false
 }
 
 async function handleStart() { await changeState('ACTIVE') }
 async function handlePause() { await changeState('PAUSED') }
 async function handleResume() { await changeState('ACTIVE') }
-async function handleEnd() { stopMicHw(); stopStt(); await changeState('ENDED') }
+async function handleEnd() { stopFakeLevel(); stopStt(); await changeState('ENDED') }
 </script>

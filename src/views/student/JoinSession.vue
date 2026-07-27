@@ -144,8 +144,6 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '../../stores/session.js'
 import { useParticipantStore } from '../../stores/participant.js'
-import { sessionApi } from '../../services/sessionApi.js'
-import { apiErrorMessage } from '../../services/api.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -167,34 +165,26 @@ onMounted(() => {
   if (route.params.code) form.value.code = String(route.params.code).toUpperCase()
 })
 
-async function submit() {
+function submit() {
   if (!form.value.code || form.value.code.length < 4) return
   joining.value = true
-  try {
-    // Public lookup: resolves the join code to a session without requiring auth.
-    const info = await sessionApi.joinInfoByCode(form.value.code.toUpperCase())
-    if (['ENDED', 'FAILED', 'EXPIRED'].includes(info.status)) {
-      joining.value = false; errorDialog.value = true; return
-    }
-    if (info.currentParticipants >= info.maxParticipants) {
-      joining.value = false; fullDialog.value = true; return
-    }
-    // Keep the local session store in sync so getSession(sessionId) resolves
-    // for the caption view even if this session wasn't loaded via the dashboard.
-    sessionStore.upsertLocal?.({
-      id: info.sessionId, title: info.title, courseId: info.courseId,
-      sourceLanguage: info.sourceLanguage, targetLanguages: info.targetLanguages,
-      status: info.status, accessMode: info.accessMode, joinCode: form.value.code.toUpperCase(),
-      maxParticipants: info.maxParticipants, participantCount: info.currentParticipants,
-    })
-    await participantStore.joinSession(info.sessionId, form.value.name, form.value.language)
-    joining.value = false
-    router.push(`/student/session/${info.sessionId}`)
-  } catch (e) {
-    joining.value = false
-    if (e?.response?.status === 404) errorDialog.value = true
-    else if (e?.response?.status === 409) fullDialog.value = true
-    else errorDialog.value = true
+
+  const info = sessionStore.sessions.find(
+    s => s.joinCode?.toUpperCase() === form.value.code.toUpperCase()
+  )
+
+  if (!info) {
+    joining.value = false; errorDialog.value = true; return
   }
+  if (['ENDED', 'FAILED', 'EXPIRED'].includes(info.status)) {
+    joining.value = false; errorDialog.value = true; return
+  }
+  if (info.participantCount >= info.maxParticipants) {
+    joining.value = false; fullDialog.value = true; return
+  }
+
+  participantStore.joinSession(info.id, form.value.name, form.value.language)
+  joining.value = false
+  router.push(`/student/session/${info.id}`)
 }
 </script>

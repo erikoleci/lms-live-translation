@@ -1,7 +1,7 @@
 <template>
   <v-chip :color="color" :variant="variant" size="small" class="font-weight-bold">
     <template #prepend>
-      <v-icon size="10" class="mr-1" :class="status === 'ACTIVE' ? 'status-pulse' : ''">mdi-circle</v-icon>
+      <v-icon size="10" class="mr-1">mdi-circle</v-icon>
     </template>
     {{ label }}
   </v-chip>
@@ -25,13 +25,3 @@ const label = computed(() => ({
   PAUSED: 'Pauzuar', ENDED: 'Përfunduar', FAILED: 'Gabim', EXPIRED: 'Skaduar',
 }[props.status] ?? props.status))
 </script>
-
-<style scoped>
-.status-pulse {
-  animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-</style>

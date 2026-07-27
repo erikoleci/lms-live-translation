@@ -88,11 +88,6 @@ const segments = computed(() => sessionStore.getTranscript(sessionId))
 const activeTab = ref('original')
 const snack = ref({ show: false, text: '', color: 'success' })
 
-onMounted(() => {
-  if (!sessionStore.getSession(sessionId)) sessionStore.fetchSession(sessionId).catch(() => {})
-  sessionStore.fetchTranscript(sessionId).catch(() => {})
-})
-
 const duration = computed(() => {
   if (!session.value?.startedAt) return '—'
   const end = session.value.endedAt ? new Date(session.value.endedAt) : new Date()

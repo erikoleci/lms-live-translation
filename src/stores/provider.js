@@ -1,55 +1,35 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { providerApi } from '../services/providerApi.js'
 
+const DEMO_PROVIDERS = [
+  { id: 'p1', providerCode: 'MYMEMORY_FREE', providerType: 'TRANSLATION', priority: 10, enabled: true, supportedLanguages: 'IT,EN,SQ', timeoutMs: 8000 },
+  { id: 'p2', providerCode: 'AZURE_SPEECH', providerType: 'STT', priority: 20, enabled: false, supportedLanguages: 'IT,EN,SQ,FR,DE', timeoutMs: 5000 },
+  { id: 'p3', providerCode: 'OPENAI_TTS', providerType: 'TTS', priority: 20, enabled: false, supportedLanguages: 'EN,IT', timeoutMs: 5000 },
+]
+
+const DEMO_USAGE_STATS = [
+  { label: 'Mon', minutes: 42 }, { label: 'Tue', minutes: 68 }, { label: 'Wed', minutes: 35 },
+  { label: 'Thu', minutes: 90 }, { label: 'Fri', minutes: 54 }, { label: 'Sat', minutes: 12 }, { label: 'Sun', minutes: 8 },
+]
+
+/** Pure client-side demo data for the admin provider-config screens. */
 export const useProviderStore = defineStore('provider', () => {
-  const providers = ref([])
-  const usageStats = ref([]) // TODO: no usage-stats endpoint yet on the backend; wire once /api/admin/usage exists
-  const loading = ref(false)
+  const providers = ref(DEMO_PROVIDERS.map(p => ({ ...p })))
+  const usageStats = ref(DEMO_USAGE_STATS)
 
-  async function fetchProviders() {
-    loading.value = true
-    try {
-      providers.value = await providerApi.list()
-      return providers.value
-    } finally {
-      loading.value = false
-    }
+  function toggleProvider(id) {
+    const p = providers.value.find(x => x.id === id)
+    if (p) p.enabled = !p.enabled
   }
 
-  async function toggleProvider(id) {
+  function updateProvider(id, updates) {
     const p = providers.value.find(x => x.id === id)
-    if (!p) return
-    const updated = await providerApi.update(id, { ...toRequestPayload(p), enabled: !p.enabled })
-    Object.assign(p, updated)
-  }
-
-  async function updateProvider(id, updates) {
-    const p = providers.value.find(x => x.id === id)
-    if (!p) return
-    const updated = await providerApi.update(id, toRequestPayload({ ...p, ...updates }))
-    Object.assign(p, updated)
+    if (p) Object.assign(p, updates)
   }
 
   function getByType(type) {
     return providers.value.filter(p => p.providerType === type)
   }
 
-  /** Maps the flat UI shape back to ProviderConfigRequest expected by the backend. */
-  function toRequestPayload(p) {
-    return {
-      providerCode: p.providerCode,
-      providerType: p.providerType,
-      priority: p.priority,
-      enabled: p.enabled,
-      credentialsRef: p.credentialsRef,
-      supportedLanguages: p.supportedLanguages,
-      supportedVoices: p.supportedVoices,
-      costLimitCents: p.costLimitCents ?? (p.costLimit != null ? Math.round(p.costLimit * 100) : null),
-      timeoutMs: p.timeoutMs,
-      fallbackProviderCode: p.fallbackProviderCode,
-    }
-  }
-
-  return { providers, usageStats, loading, fetchProviders, toggleProvider, updateProvider, getByType }
+  return { providers, usageStats, toggleProvider, updateProvider, getByType }
 })

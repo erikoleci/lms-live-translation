@@ -183,7 +183,6 @@ import { useDisplay } from 'vuetify'
 import { useSessionStore } from '../../stores/session.js'
 import { useParticipantStore } from '../../stores/participant.js'
 import { useUiStore } from '../../stores/ui.js'
-import { useLiveEvents } from '../../composables/useLiveEvents.js'
 import { useBrowserTts } from '../../composables/useBrowserTts.js'
 import SettingsPanelContent from '../../components/student/SettingsPanelContent.vue'
 import StatusChip from '../../components/shared/StatusChip.vue'
@@ -208,8 +207,10 @@ const showSettings = ref(false)
 const audioEnabled = ref(false)
 const selectedVoice = ref('')
 
-// Real caption/translation feed (spec 6.2) — replaces the fake 'CONNECTED' stub.
-const { status: wsStatus, connect: wsConnect, disconnect: wsDisconnect } = useLiveEvents(sessionId)
+// Local reactive caption feed: segments arrive into the session store via
+// the (simulated, on the teacher side) transcript generator -- this view
+// just reflects whatever's in the store, same as it would with a real feed.
+const wsStatus = computed(() => (session.value?.status === 'ACTIVE' ? 'connected' : 'idle'))
 
 const availableLangs = [
   { value: 'SQ', shortLabel: 'SHQ', flag: '🇦🇱' },
@@ -228,10 +229,8 @@ function displayText(seg) {
   return tr?.translatedText ?? seg.originalText
 }
 
-// FREE testing path: speak new final translations out loud via the browser's
-// own SpeechSynthesis (no backend TTS provider needed — see useBrowserTts.js
-// and the backend's TtsOrchestrator, which simply skips synthesis when no
-// cloud TTS provider is configured).
+// Speaks new final translations out loud via the browser's own
+// SpeechSynthesis -- purely client-side, no server involved.
 const { speak: speakTts } = useBrowserTts()
 let lastSpokenSegmentId = null
 watch(segments, (segs) => {
@@ -250,13 +249,11 @@ function leave() {
   router.push('/student/join')
 }
 
-// Push language/audio/voice preference changes to the backend so TtsOrchestrator
-// knows who currently wants audio in which language (spec section 9).
+// Keep the participant's local preferences in sync as they change settings.
 watch([selectedLanguage, audioEnabled, selectedVoice], ([lang, audio, voice]) => {
   const p = participantStore.currentParticipant
   if (!p || p.sessionId !== sessionId) return
-  participantStore.persistPreferences(sessionId, p.id, { targetLanguage: lang, audioEnabled: audio, voiceCode: voice })
-    .catch(() => {}) // non-fatal: local UI state already reflects the change optimistically
+  participantStore.updatePreferences(p.id, { targetLanguage: lang, audioEnabled: audio, voiceCode: voice })
 })
 
 onMounted(() => {
@@ -265,7 +262,5 @@ onMounted(() => {
     router.push(`/student/join/${session.value.joinCode}`)
     return
   }
-  wsConnect()
 })
-onUnmounted(() => wsDisconnect())
 </script>

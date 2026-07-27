@@ -127,17 +127,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useProviderStore } from '../../stores/provider.js'
 import { useSessionStore } from '../../stores/session.js'
 import UsageChart from '../../components/admin/UsageChart.vue'
 
 const providerStore = useProviderStore()
 const sessionStore = useSessionStore()
-onMounted(() => {
-  providerStore.fetchProviders().catch(() => {})
-  sessionStore.fetchSessions().catch(() => {})
-})
 
 const kpis = computed(() => [
   {

@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../../stores/session.js'
 import { useWorkspaceStore } from '../../stores/workspace.js'
@@ -100,10 +100,6 @@ const sessionStore = useSessionStore()
 const workspaceStore = useWorkspaceStore()
 const router = useRouter()
 const showCreate = ref(false)
-
-// Loads this teacher's sessions from the backend on every dashboard visit;
-// the persisted local copy is just a cache used until this resolves.
-onMounted(() => { sessionStore.fetchSessions().catch(() => {}) })
 
 const pendingSessions = computed(() => sessionStore.sessions.filter(s => ['CREATED', 'WAITING'].includes(s.status)))
 const activeSessions = computed(() => sessionStore.sessions.filter(s => ['ACTIVE', 'PAUSED'].includes(s.status)))

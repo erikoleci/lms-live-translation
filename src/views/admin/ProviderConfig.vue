@@ -84,12 +84,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useProviderStore } from '../../stores/provider.js'
 import ProviderCard from '../../components/admin/ProviderCard.vue'
 
 const providerStore = useProviderStore()
-onMounted(() => { providerStore.fetchProviders().catch(() => {}) })
 const activeType = ref('ALL')
 const editDialog = ref(false)
 const editProvider = ref(null)
