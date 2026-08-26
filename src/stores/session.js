@@ -1,8 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
+const API_BASE = 'http://localhost:8080'
+
 function uid() {
-  return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  return crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
 function randomJoinCode() {
@@ -10,33 +14,17 @@ function randomJoinCode() {
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }
 
-const DEMO_SESSIONS = [
-  {
-    id: 'demo-1', title: 'Machine Learning — Lecture 4', courseName: 'AI Fundamentals',
-    sourceLanguage: 'IT', targetLanguages: ['EN', 'SQ'], status: 'ACTIVE',
-    joinCode: 'ML4X9K', accessMode: 'OPEN', participantCount: 12, maxParticipants: 300,
-    recordingEnabled: false, studentTranscriptDownloadEnabled: true,
-    startedAt: new Date(Date.now() - 12 * 60000).toISOString(), endedAt: null,
-  },
-  {
-    id: 'demo-2', title: 'European History — Seminar 2', courseName: 'History 201',
-    sourceLanguage: 'EN', targetLanguages: ['IT', 'SQ'], status: 'ENDED',
-    joinCode: 'HIS2A7', accessMode: 'OPEN', participantCount: 28, maxParticipants: 300,
-    recordingEnabled: false, studentTranscriptDownloadEnabled: true,
-    startedAt: new Date(Date.now() - 86400000).toISOString(),
-    endedAt: new Date(Date.now() - 82800000).toISOString(),
-  },
-]
+function normalizeSession(data) {
+  if (!data) return data
+  return {
+    ...data,
+    participantCount: data.currentParticipantCount ?? data.participantCount ?? 0,
+    courseName: data.courseName || data.courseId || '',
+  }
+}
 
-/**
- * Pure client-side UI state for the session views — no backend, no network.
- * Sessions live only in memory (optionally persisted to localStorage for a
- * nicer demo experience across reloads). This is a presentation-layer demo
- * store: everything here is mock data meant to make every screen look and
- * feel complete without any server behind it.
- */
 export const useSessionStore = defineStore('session', () => {
-  const sessions = ref(DEMO_SESSIONS.map(s => ({ ...s })))
+  const sessions = ref([])
   const activeSessionId = ref(null)
   const transcript = ref([])
   const micActive = ref(false)
@@ -48,42 +36,118 @@ export const useSessionStore = defineStore('session', () => {
   )
 
   const activeSessions = computed(() =>
-    sessions.value.filter(s => ['CREATED', 'WAITING', 'ACTIVE', 'PAUSED'].includes(s.status))
+    sessions.value.filter(s =>
+      ['CREATED', 'WAITING', 'ACTIVE', 'PAUSED'].includes(s.status)
+    )
   )
 
   const endedSessions = computed(() =>
     sessions.value.filter(s => s.status === 'ENDED' || s.status === 'EXPIRED')
   )
 
-  function getSession(id) {
-    return sessions.value.find(s => s.id === id)
-  }
-
-  function getTranscript(sessionId) {
-    return transcript.value.filter(s => s.sessionId === sessionId)
-  }
-
-  function createSession(payload) {
-    const created = {
-      id: uid(),
-      title: payload.title || 'Untitled Session',
-      courseName: payload.courseName || '',
-      sourceLanguage: payload.sourceLanguage || 'IT',
-      targetLanguages: payload.targetLanguages || ['EN'],
-      status: 'CREATED',
-      joinCode: randomJoinCode(),
-      accessMode: payload.accessMode || 'OPEN',
-      participantCount: 0,
-      maxParticipants: payload.maxParticipants || 300,
-      recordingEnabled: payload.recordingEnabled ?? false,
-      studentTranscriptDownloadEnabled: payload.studentTranscriptDownloadEnabled ?? true,
-      startedAt: null,
-      endedAt: null,
+  // ========== API CALLS ==========
+  async function fetchSessions() {
+    try {
+      const res = await fetch(`${API_BASE}/api/sessions`)
+      if (!res.ok) throw new Error('Failed to fetch sessions')
+      const data = await res.json()
+      sessions.value = (data || []).map(normalizeSession)
+      return sessions.value
+    } catch (err) {
+      console.warn('Backend not available', err)
     }
-    sessions.value.unshift(created)
-    return created
   }
 
+  async function createSession(payload) {
+    try {
+      const res = await fetch(`${API_BASE}/api/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: payload.title || 'Untitled Session',
+          courseId: payload.courseId || payload.courseName || null,
+          accessMode: payload.accessMode || 'OPEN',
+          sourceLanguage: payload.sourceLanguage || 'IT',
+          targetLanguages: payload.targetLanguages || ['EN', 'SQ'],
+          recordingEnabled: payload.recordingEnabled ?? false,
+          studentTranscriptDownloadEnabled: payload.studentTranscriptDownloadEnabled ?? true,
+          maxParticipants: payload.maxParticipants || 300
+        })
+      })
+
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || 'Failed to create session')
+      }
+
+      const data = normalizeSession(await res.json())
+      sessions.value.unshift(data)
+      return data
+    } catch (err) {
+      console.error('Error creating session on backend:', err)
+
+      // fallback lokal
+      const created = {
+        id: uid(),
+        title: payload.title || 'Untitled Session',
+        courseName: payload.courseName || payload.courseId || '',
+        courseId: payload.courseId || null,
+        sourceLanguage: payload.sourceLanguage || 'IT',
+        targetLanguages: payload.targetLanguages || ['EN', 'SQ'],
+        status: 'CREATED',
+        joinCode: randomJoinCode(),
+        accessMode: payload.accessMode || 'OPEN',
+        participantCount: 0,
+        maxParticipants: payload.maxParticipants || 300,
+        recordingEnabled: payload.recordingEnabled ?? false,
+        studentTranscriptDownloadEnabled: payload.studentTranscriptDownloadEnabled ?? true,
+        startedAt: null,
+        endedAt: null,
+      }
+      sessions.value.unshift(created)
+      return created
+    }
+  }
+
+  // Sync – për computed në Vue
+  function getSession(id) {
+    return sessions.value.find(s => s.id === id) || null
+  }
+
+  // Async – ngarkon nga backend
+  async function fetchSession(id) {
+    try {
+      const res = await fetch(`${API_BASE}/api/sessions/${id}`)
+      if (!res.ok) throw new Error('Session not found')
+      const data = normalizeSession(await res.json())
+      const idx = sessions.value.findIndex(s => s.id === id)
+      if (idx !== -1) sessions.value[idx] = data
+      else sessions.value.unshift(data)
+      return data
+    } catch (err) {
+      console.warn('fetchSession failed', err)
+      return sessions.value.find(s => s.id === id) || null
+    }
+  }
+
+  async function changeSessionState(id, state) {
+    try {
+      const res = await fetch(`${API_BASE}/api/sessions/${id}/state?state=${state}`, {
+        method: 'PATCH'
+      })
+      if (!res.ok) throw new Error('Failed to change state')
+      const updated = normalizeSession(await res.json())
+      const idx = sessions.value.findIndex(s => s.id === id)
+      if (idx !== -1) sessions.value[idx] = updated
+      return updated
+    } catch (err) {
+      console.error(err)
+      updateSessionStatus(id, state)
+      return getSession(id)
+    }
+  }
+
+  // ========== LOCAL HELPERS ==========
   function updateSessionStatus(id, status) {
     const session = sessions.value.find(s => s.id === id)
     if (!session) return
@@ -94,11 +158,6 @@ export const useSessionStore = defineStore('session', () => {
     if (status === 'ENDED' || status === 'EXPIRED' || status === 'FAILED') {
       session.endedAt = new Date().toISOString()
     }
-  }
-
-  function changeSessionState(id, state) {
-    updateSessionStatus(id, state)
-    return getSession(id)
   }
 
   function setActiveSession(id) {
@@ -125,10 +184,31 @@ export const useSessionStore = defineStore('session', () => {
     else transcript.value.push(segment)
   }
 
+  function getTranscript(sessionId) {
+    return transcript.value.filter(s => s.sessionId === sessionId)
+  }
+
   return {
-    sessions, activeSessionId, transcript, micActive, audioLevel, isMuted,
-    activeSession, activeSessions, endedSessions,
-    getSession, getTranscript, createSession, updateSessionStatus, changeSessionState,
-    setActiveSession, setMicActive, setAudioLevel, toggleMute, addTranscriptSegment,
+    sessions,
+    activeSessionId,
+    transcript,
+    micActive,
+    audioLevel,
+    isMuted,
+    activeSession,
+    activeSessions,
+    endedSessions,
+    fetchSessions,
+    createSession,
+    getSession,
+    fetchSession,
+    changeSessionState,
+    updateSessionStatus,
+    setActiveSession,
+    setMicActive,
+    setAudioLevel,
+    toggleMute,
+    addTranscriptSegment,
+    getTranscript,
   }
 })
