@@ -44,7 +44,9 @@ public class SessionResource {
         session.status = SessionStatus.CREATED;
         session.recordingEnabled = req.recordingEnabled;
         session.studentTranscriptDownloadEnabled = req.studentTranscriptDownloadEnabled;
-        session.maxParticipants = req.maxParticipants > 0 ? req.maxParticipants : 300;
+        session.maxParticipants = (req.maxParticipants != null && req.maxParticipants > 0)
+                ? req.maxParticipants
+                : 300;
         session.joinCode = generateJoinCode();
         session.persist();
 
