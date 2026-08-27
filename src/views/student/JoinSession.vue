@@ -27,6 +27,8 @@ onMounted(() => {
 })
 
 async function submit() {
+  console.log('SUBMIT CLICKED', form.value.code)
+
   if (!form.value.code || form.value.code.length < 4) return
 
   joining.value = true
@@ -44,6 +46,8 @@ async function submit() {
         audioEnabled: false
       })
     })
+
+    console.log('JOIN STATUS', res.status)
 
     if (res.status === 404) {
       errorDialog.value = true
@@ -64,6 +68,7 @@ async function submit() {
     }
 
     const data = await res.json()
+    console.log('JOIN OK', data)
 
     if (typeof participantStore.joinSession === 'function') {
       participantStore.joinSession(
@@ -75,7 +80,6 @@ async function submit() {
     }
 
     sessionStorage.setItem('participant', JSON.stringify(data))
-
     router.push(`/student/session/${data.sessionId}`)
   } catch (err) {
     console.error('Join failed', err)
