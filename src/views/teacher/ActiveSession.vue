@@ -6,6 +6,7 @@ import QrcodeVue from 'qrcode.vue'
 import { useSessionStore } from '../../stores/session.js'
 import { useUiStore } from '../../stores/ui.js'
 import { useSimulatedTranscript } from '../../composables/useSimulatedTranscript.js'
+import { useSessionWs } from '../../composables/useSessionWs.js'
 import SessionControls from '../../components/teacher/SessionControls.vue'
 import StatusChip from '../../components/shared/StatusChip.vue'
 import ConnectionStatus from '../../components/shared/ConnectionStatus.vue'
@@ -15,19 +16,24 @@ const route = useRoute()
 const { smAndDown } = useDisplay()
 const sessionStore = useSessionStore()
 const uiStore = useUiStore()
-
 const sessionId = route.params.id
 const session = computed(() => sessionStore.getSession(sessionId))
 const segments = computed(() => sessionStore.getTranscript(sessionId))
-
 const actionLoading = ref(false)
 const micLoading = ref(false)
 const sidebarOpen = ref(true)
 const micError = ref(null)
 const sttError = ref(null)
 const sttSupported = true
+const captionDraft = ref('')
 
 const { start: startStt, stop: stopStt } = useSimulatedTranscript(sessionId)
+const {
+  status: wsConnStatus,
+  connect: connectWs,
+  sendCaption,
+  disconnect: disconnectWs,
+} = useSessionWs(sessionId)
 
 let levelInterval = null
 function startFakeLevel() {
@@ -42,22 +48,25 @@ function stopFakeLevel() {
   }
 }
 
-const wsStatus = computed(() => (session.value?.status === 'ACTIVE' ? 'connected' : 'idle'))
+const wsStatus = computed(() => {
+  if (wsConnStatus.value === 'connected') return 'connected'
+  if (wsConnStatus.value === 'connecting') return 'connecting'
+  if (wsConnStatus.value === 'error') return 'error'
+  return session.value?.status === 'ACTIVE' ? 'connected' : 'idle'
+})
+
 const qrFloat = ref(true)
 const qrMinimized = ref(false)
 const qrPos = ref({ x: Math.max(0, window.innerWidth - 290), y: 80 })
 const qrSheetRef = ref(null)
 const snack = ref({ show: false, text: '', color: 'success' })
-
 const isLive = computed(() =>
   session.value?.status === 'ACTIVE' && sessionStore.micActive && !sessionStore.isMuted
 )
-
 const joinUrl = computed(() =>
   `${window.location.origin}${window.location.pathname}#/student/join/${session.value?.joinCode}`
 )
 
-// Drag
 let dragOffset = { x: 0, y: 0 }
 function startDrag(e) {
   if (e.target.closest('button') || e.target.closest('.v-btn')) return
@@ -92,7 +101,6 @@ async function copyLink() {
   await navigator.clipboard.writeText(joinUrl.value)
   snack.value = { show: true, text: 'Link copied!', color: 'success' }
 }
-
 function downloadQr() {
   const canvas = qrSheetRef.value?.$el?.querySelector('canvas')
   if (!canvas) return
@@ -109,7 +117,6 @@ function msToSrtTime(ms) {
   const ms2 = ms % 1000
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms2).padStart(3, '0')}`
 }
-
 function downloadTranscript(format = 'txt') {
   const sess = session.value
   const segs = segments.value
@@ -156,26 +163,21 @@ function formatTime(ms) {
   const s = Math.floor(ms / 1000)
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
-
 const now = ref(Date.now())
 let tickInterval = null
-
 const liveText = computed(() => {
   if (!sessionStore.micActive || sessionStore.isMuted) return ''
   const all = segments.value
   return all.length ? all[all.length - 1].originalText ?? '' : ''
 })
-
 const duration = computed(() => {
   if (!session.value?.startedAt) return '—'
   const ms = now.value - new Date(session.value.startedAt).getTime()
   return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`
 })
-
 const micStatusTextClass = computed(() =>
   !sessionStore.micActive ? 'text-disabled' : sessionStore.isMuted ? 'text-warning' : 'text-success font-weight-bold'
 )
-
 const micStatusLabel = computed(() =>
   !sessionStore.micActive
     ? 'Microphone off'
@@ -184,22 +186,53 @@ const micStatusLabel = computed(() =>
       : `Live — ${Math.round(sessionStore.audioLevel)}%`
 )
 
+function sendDemoCaption() {
+  const t = captionDraft.value.trim()
+  if (!t) return
+  const ok = sendCaption({
+    type: 'caption',
+    text: t,
+    isFinal: true,
+    sourceLanguage: session.value?.sourceLanguage || 'IT',
+    id: crypto.randomUUID(),
+    ts: Date.now(),
+  })
+  if (ok) {
+    sessionStore.addTranscriptSegment({
+      id: crypto.randomUUID(),
+      sessionId,
+      sequenceNo: Date.now(),
+      originalText: t,
+      sourceLanguage: session.value?.sourceLanguage || 'IT',
+      isFinal: true,
+      startOffsetMs: 0,
+      translations: [],
+    })
+    captionDraft.value = ''
+    snack.value = { show: true, text: 'Caption u dergua', color: 'success' }
+  } else {
+    snack.value = { show: true, text: 'WebSocket jo i lidhur', color: 'error' }
+  }
+}
+
 onMounted(async () => {
   tickInterval = setInterval(() => {
     now.value = Date.now()
   }, 1000)
   sessionStore.setActiveSession(sessionId)
-  await sessionStore.fetchSession(sessionId)
+  if (typeof sessionStore.fetchSession === 'function') {
+    await sessionStore.fetchSession(sessionId)
+  }
+  connectWs()
 })
-
 onUnmounted(() => {
   clearInterval(tickInterval)
   stopFakeLevel()
   stopStt()
+  disconnectWs()
   sessionStore.setActiveSession(null)
   endDrag()
 })
-
 watch(
   () => session.value?.status,
   (s) => {
@@ -209,7 +242,6 @@ watch(
     }
   }
 )
-
 async function startMic() {
   micLoading.value = true
   sessionStore.setMicActive(true)
@@ -220,7 +252,6 @@ async function startMic() {
   }
   micLoading.value = false
 }
-
 function stopMic() {
   stopFakeLevel()
   stopStt()
@@ -230,7 +261,6 @@ function stopMic() {
     changeState('ENDED')
   }
 }
-
 async function changeState(newState) {
   actionLoading.value = true
   try {
@@ -239,7 +269,6 @@ async function changeState(newState) {
     actionLoading.value = false
   }
 }
-
 async function handleStart() {
   await changeState('ACTIVE')
 }
