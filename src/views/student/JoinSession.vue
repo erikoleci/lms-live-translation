@@ -21,15 +21,12 @@ const languages = [
 ]
 
 onMounted(() => {
-  alert('FILE I RI U NGARKUA')
   if (route.params.code) {
     form.value.code = String(route.params.code).toUpperCase()
   }
 })
 
 async function submit() {
-  alert('SUBMIT: ' + form.value.code)
-
   if (!form.value.code || form.value.code.length < 4) return
 
   joining.value = true
@@ -47,8 +44,6 @@ async function submit() {
         audioEnabled: false
       })
     })
-
-    alert('STATUS: ' + res.status)
 
     if (res.status === 404) {
       errorDialog.value = true
@@ -83,7 +78,6 @@ async function submit() {
     router.push(`/student/session/${data.sessionId}`)
   } catch (err) {
     console.error('Join failed', err)
-    alert('ERROR: ' + err.message)
     errorDialog.value = true
   } finally {
     joining.value = false
