@@ -1,7 +1,5 @@
 <template>
   <v-layout style="height:100vh; overflow:hidden" :class="{ 'zana-high-contrast': uiStore.highContrastMode }">
-
-    <!-- APP BAR -->
     <v-app-bar flat border="b" height="60" density="compact" color="surface">
       <div class="d-flex align-center gap-2 ml-3">
         <v-avatar size="32" rounded="lg">
@@ -15,11 +13,8 @@
           </div>
         </div>
       </div>
-
       <template #append>
         <div class="d-flex align-center gap-1 pr-2">
-
-          <!-- Language switcher — i madh dhe i qartë -->
           <div class="d-flex gap-1" role="group" aria-label="Zgjedh gjuhën e shfaqjes">
             <v-btn
               v-for="lang in availableLangs"
@@ -37,42 +32,33 @@
               <span class="d-none d-sm-inline ml-1 text-caption font-weight-bold">{{ lang.shortLabel }}</span>
             </v-btn>
           </div>
-
           <v-divider vertical class="mx-1" style="height:24px" />
-
-          <!-- Font size -->
           <v-btn icon="mdi-format-font-size-decrease" size="small" variant="text"
             aria-label="Zvogëlo madhësinë e shkrimit"
             @click="uiStore.setCaptionFontSize(uiStore.captionFontSize - 2)" />
           <v-btn icon="mdi-format-font-size-increase" size="small" variant="text"
             aria-label="Zmadho madhësinë e shkrimit"
             @click="uiStore.setCaptionFontSize(uiStore.captionFontSize + 2)" />
-
           <v-btn
             :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
             variant="text" size="small" @click="uiStore.toggleDarkMode()"
             :aria-label="uiStore.darkMode ? 'Kalo në temë të çelët' : 'Kalo në temë të errët'" />
-
           <v-btn icon="mdi-contrast-circle" variant="text" size="small"
             @click="uiStore.toggleHighContrast()"
             :aria-label="uiStore.highContrastMode ? 'Çaktivizo kontrastin e lartë' : 'Aktivizo kontrastin e lartë'" />
-
           <v-btn
             v-if="session?.studentTranscriptDownloadEnabled"
             icon="mdi-download" variant="text" size="small"
             aria-label="Shkarko transkriptin (.txt)"
             @click="downloadTranscript" />
-
           <v-btn icon="mdi-cog-outline" variant="tonal" size="small" @click="showSettings = !showSettings"
             aria-label="Hap cilësimet" />
-
           <v-btn icon="mdi-exit-to-app" variant="tonal" size="small" color="error" @click="leave"
             aria-label="Largohu nga sesioni" />
         </div>
       </template>
     </v-app-bar>
 
-    <!-- Settings drawer (desktop) -->
     <v-navigation-drawer v-if="!smAndDown" v-model="showSettings" temporary location="right" width="300">
       <v-list-item class="py-4">
         <v-list-item-title class="text-body-1 font-weight-bold">Cilësimet</v-list-item-title>
@@ -94,38 +80,36 @@
       />
     </v-navigation-drawer>
 
-    <!-- ZONA KRYESORE E CAPTION-EVE -->
     <v-main>
       <v-sheet
         :color="uiStore.darkMode ? '#121212' : '#F5F5F5'"
         class="d-flex flex-column"
         style="height:100%; position:relative"
       >
+        <div v-if="loading" class="d-flex flex-column align-center justify-center flex-grow-1 gap-4">
+          <v-progress-circular indeterminate color="primary" size="56" width="4" />
+          <p class="text-body-1 font-weight-bold">Duke ngarkuar sesionin…</p>
+        </div>
 
-        <!-- Waiting state -->
-        <div v-if="!segments.length" class="d-flex flex-column align-center justify-center flex-grow-1 gap-4">
+        <div v-else-if="!segments.length" class="d-flex flex-column align-center justify-center flex-grow-1 gap-4">
           <v-progress-circular indeterminate color="primary" size="56" width="4" />
           <div class="text-center">
             <p class="text-body-1 font-weight-bold mb-1">Duke pritur mësuesin…</p>
             <p class="text-body-2 text-medium-emphasis">Caption-et do të shfaqen këtu automatikisht</p>
           </div>
-          <!-- Language reminder -->
           <v-chip :color="langColor" variant="flat" prepend-icon="mdi-translate" size="large" class="mt-2">
             Duke parë: {{ currentLangLabel }}
           </v-chip>
         </div>
 
-        <!-- Caption blocks -->
         <div v-else ref="captionContainer"
           class="flex-grow-1 overflow-hidden d-flex flex-column justify-end pa-4 pa-sm-6 pa-md-8">
           <v-slide-y-reverse-transition group leave-absolute>
             <div v-for="seg in visibleSegments" :key="seg.id" class="mb-3">
-              <!-- Partial indicator -->
               <div v-if="!seg.isFinal" class="d-flex align-center gap-1 mb-1">
                 <v-progress-circular indeterminate size="10" width="2" color="orange" />
                 <span class="text-caption text-orange">Duke transkriptuar…</span>
               </div>
-
               <v-sheet
                 rounded="2xl"
                 :color="uiStore.darkMode ? '#1E1E1E' : 'white'"
@@ -138,8 +122,6 @@
                   :style="`font-size: ${uiStore.captionFontSize}px; line-height: 1.6`">
                   {{ displayText(seg) }}
                 </p>
-
-                <!-- Teksti origjinal (opsional) -->
                 <div v-if="showOriginal && selectedLanguage !== seg.sourceLanguage"
                   class="d-flex align-center gap-1 mt-2 pt-2" style="border-top: 1px solid rgba(0,0,0,0.08)">
                   <v-icon size="12" color="grey">mdi-translate</v-icon>
@@ -150,7 +132,6 @@
           </v-slide-y-reverse-transition>
         </div>
 
-        <!-- Info bar poshtë -->
         <div class="d-flex align-center gap-3 px-4 py-2 flex-shrink-0"
           style="border-top: 1px solid rgba(0,0,0,0.08)">
           <v-chip :color="langColor" size="small" variant="tonal">
@@ -166,7 +147,6 @@
       </v-sheet>
     </v-main>
 
-    <!-- Mobile settings bottom sheet -->
     <v-bottom-sheet v-if="smAndDown" v-model="showSettings">
       <v-sheet rounded="t-xl" max-height="80vh" class="overflow-y-auto">
         <v-list-item class="py-4">
@@ -189,7 +169,6 @@
         />
       </v-sheet>
     </v-bottom-sheet>
-
   </v-layout>
 </template>
 
@@ -295,7 +274,6 @@ function downloadTranscript() {
 onMounted(async () => {
   loading.value = true
   try {
-    // 1. Lexo join data nga sessionStorage
     const raw = sessionStorage.getItem('participant')
     const joinData = raw ? JSON.parse(raw) : null
 
@@ -306,7 +284,6 @@ onMounted(async () => {
       audioEnabled.value = joinData.audioEnabled
     }
 
-    // 2. Merr sesionin nga backend
     const res = await fetch(`${API_BASE}/api/sessions/${sessionId}`)
     if (!res.ok) {
       router.push('/student/join')
@@ -319,7 +296,6 @@ onMounted(async () => {
       courseName: data.courseId || '',
     }
 
-    // 3. Opsionale: ruaj në store nëse ka metodë
     if (typeof sessionStore.setActiveSession === 'function') {
       sessionStore.setActiveSession(sessionId)
     }
