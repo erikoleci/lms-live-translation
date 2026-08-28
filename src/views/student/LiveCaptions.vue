@@ -194,7 +194,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useSessionStore } from '../../stores/session.js'
@@ -205,6 +205,8 @@ import SettingsPanelContent from '../../components/student/SettingsPanelContent.
 import StatusChip from '../../components/shared/StatusChip.vue'
 import ConnectionStatus from '../../components/shared/ConnectionStatus.vue'
 
+const API_BASE = 'http://localhost:8080'
+
 const route = useRoute()
 const router = useRouter()
 const { smAndDown } = useDisplay()
@@ -213,20 +215,29 @@ const participantStore = useParticipantStore()
 const uiStore = useUiStore()
 
 const sessionId = route.params.id
-const session = computed(() => sessionStore.getSession(sessionId))
-const segments = computed(() => sessionStore.getTranscript(sessionId))
-const visibleSegments = computed(() => segments.value.slice(-4))
-const participants = computed(() => participantStore.getParticipantsForSession(sessionId))
+const loading = ref(true)
+const session = ref(null)
 
-const selectedLanguage = ref(participantStore.currentParticipant?.targetLanguage ?? 'SQ')
+const segments = computed(() => {
+  if (typeof sessionStore.getTranscript === 'function') {
+    return sessionStore.getTranscript(sessionId) || []
+  }
+  return []
+})
+const visibleSegments = computed(() => segments.value.slice(-4))
+const participants = computed(() => {
+  if (typeof participantStore.getParticipantsForSession === 'function') {
+    return participantStore.getParticipantsForSession(sessionId) || []
+  }
+  return []
+})
+
+const selectedLanguage = ref('SQ')
 const showOriginal = ref(false)
 const showSettings = ref(false)
 const audioEnabled = ref(false)
 const selectedVoice = ref('')
 
-// Local reactive caption feed: segments arrive into the session store via
-// the (simulated, on the teacher side) transcript generator -- this view
-// just reflects whatever's in the store, same as it would with a real feed.
 const wsStatus = computed(() => (session.value?.status === 'ACTIVE' ? 'connected' : 'idle'))
 
 const availableLangs = [
@@ -234,8 +245,11 @@ const availableLangs = [
   { value: 'EN', shortLabel: 'ENG', flag: '🇬🇧' },
   { value: 'IT', shortLabel: 'ITA', flag: '🇮🇹' },
 ]
-
-const langMeta = { SQ: { label: 'Shqip', flag: '🇦🇱', color: 'red' }, EN: { label: 'English', flag: '🇬🇧', color: 'blue' }, IT: { label: 'Italiano', flag: '🇮🇹', color: 'green' } }
+const langMeta = {
+  SQ: { label: 'Shqip', flag: '🇦🇱', color: 'red' },
+  EN: { label: 'English', flag: '🇬🇧', color: 'blue' },
+  IT: { label: 'Italiano', flag: '🇮🇹', color: 'green' },
+}
 const currentLangLabel = computed(() => langMeta[selectedLanguage.value]?.label ?? selectedLanguage.value)
 const currentLangFlag = computed(() => langMeta[selectedLanguage.value]?.flag ?? '')
 const langColor = computed(() => langMeta[selectedLanguage.value]?.color ?? 'primary')
@@ -246,8 +260,6 @@ function displayText(seg) {
   return tr?.translatedText ?? seg.originalText
 }
 
-// Speaks new final translations out loud via the browser's own
-// SpeechSynthesis -- purely client-side, no server involved.
 const { speak: speakTts } = useBrowserTts()
 let lastSpokenSegmentId = null
 watch(segments, (segs) => {
@@ -261,8 +273,7 @@ watch(segments, (segs) => {
 }, { deep: true })
 
 function leave() {
-  const p = participantStore.currentParticipant
-  if (p) participantStore.leaveSession(sessionId, p.id)
+  sessionStorage.removeItem('participant')
   router.push('/student/join')
 }
 
@@ -281,18 +292,42 @@ function downloadTranscript() {
   a.click()
 }
 
-// Keep the participant's local preferences in sync as they change settings.
-watch([selectedLanguage, audioEnabled, selectedVoice], ([lang, audio, voice]) => {
-  const p = participantStore.currentParticipant
-  if (!p || p.sessionId !== sessionId) return
-  participantStore.updatePreferences(p.id, { targetLanguage: lang, audioEnabled: audio, voiceCode: voice })
-})
+onMounted(async () => {
+  loading.value = true
+  try {
+    // 1. Lexo join data nga sessionStorage
+    const raw = sessionStorage.getItem('participant')
+    const joinData = raw ? JSON.parse(raw) : null
 
-onMounted(() => {
-  if (!session.value) { router.push('/student/join'); return }
-  if (!participantStore.currentParticipant || participantStore.currentParticipant.sessionId !== sessionId) {
-    router.push(`/student/join/${session.value.joinCode}`)
-    return
+    if (joinData?.targetLanguage) {
+      selectedLanguage.value = joinData.targetLanguage
+    }
+    if (joinData?.audioEnabled != null) {
+      audioEnabled.value = joinData.audioEnabled
+    }
+
+    // 2. Merr sesionin nga backend
+    const res = await fetch(`${API_BASE}/api/sessions/${sessionId}`)
+    if (!res.ok) {
+      router.push('/student/join')
+      return
+    }
+    const data = await res.json()
+    session.value = {
+      ...data,
+      participantCount: data.currentParticipantCount ?? 0,
+      courseName: data.courseId || '',
+    }
+
+    // 3. Opsionale: ruaj në store nëse ka metodë
+    if (typeof sessionStore.setActiveSession === 'function') {
+      sessionStore.setActiveSession(sessionId)
+    }
+  } catch (e) {
+    console.error(e)
+    router.push('/student/join')
+  } finally {
+    loading.value = false
   }
 })
 </script>
