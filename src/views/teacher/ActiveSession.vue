@@ -7,6 +7,7 @@ import { useSessionStore } from '../../stores/session.js'
 import { useUiStore } from '../../stores/ui.js'
 import { useSimulatedTranscript } from '../../composables/useSimulatedTranscript.js'
 import { useSessionWs } from '../../composables/useSessionWs.js'
+import { useBrowserStt } from '../../composables/useBrowserStt.js'
 import SessionControls from '../../components/teacher/SessionControls.vue'
 import StatusChip from '../../components/shared/StatusChip.vue'
 import ConnectionStatus from '../../components/shared/ConnectionStatus.vue'
@@ -17,6 +18,15 @@ const { smAndDown } = useDisplay()
 const sessionStore = useSessionStore()
 const uiStore = useUiStore()
 const sessionId = route.params.id
+const captionDraft = ref('')
+const {
+  status: wsConnStatus,
+  connect: connectWs,
+  sendCaption,
+  disconnect: disconnectWs,
+} = useSessionWs(sessionId)
+const browserStt = useBrowserStt()
+
 const session = computed(() => sessionStore.getSession(sessionId))
 const segments = computed(() => sessionStore.getTranscript(sessionId))
 const actionLoading = ref(false)
@@ -24,16 +34,9 @@ const micLoading = ref(false)
 const sidebarOpen = ref(true)
 const micError = ref(null)
 const sttError = ref(null)
-const sttSupported = true
-const captionDraft = ref('')
+const sttSupported = browserStt.isSupported()
 
-const { start: startStt, stop: stopStt } = useSimulatedTranscript(sessionId)
-const {
-  status: wsConnStatus,
-  connect: connectWs,
-  sendCaption,
-  disconnect: disconnectWs,
-} = useSessionWs(sessionId)
+const { start: startSimStt, stop: stopSimStt } = useSimulatedTranscript(sessionId)
 
 let levelInterval = null
 function startFakeLevel() {
@@ -163,6 +166,7 @@ function formatTime(ms) {
   const s = Math.floor(ms / 1000)
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
+
 const now = ref(Date.now())
 let tickInterval = null
 const liveText = computed(() => {
@@ -186,6 +190,31 @@ const micStatusLabel = computed(() =>
       : `Live — ${Math.round(sessionStore.audioLevel)}%`
 )
 
+function pushCaption(text) {
+  if (!text) return
+  const src = session.value?.sourceLanguage || 'IT'
+  sendCaption({
+    type: 'caption',
+    text,
+    isFinal: true,
+    sourceLanguage: src,
+    id: crypto.randomUUID(),
+    ts: Date.now(),
+  })
+  if (typeof sessionStore.addTranscriptSegment === 'function') {
+    sessionStore.addTranscriptSegment({
+      id: crypto.randomUUID(),
+      sessionId,
+      sequenceNo: Date.now(),
+      originalText: text,
+      sourceLanguage: src,
+      isFinal: true,
+      startOffsetMs: 0,
+      translations: [],
+    })
+  }
+}
+
 function sendDemoCaption() {
   const t = captionDraft.value.trim()
   if (!t) return
@@ -198,16 +227,7 @@ function sendDemoCaption() {
     ts: Date.now(),
   })
   if (ok) {
-    sessionStore.addTranscriptSegment({
-      id: crypto.randomUUID(),
-      sessionId,
-      sequenceNo: Date.now(),
-      originalText: t,
-      sourceLanguage: session.value?.sourceLanguage || 'IT',
-      isFinal: true,
-      startOffsetMs: 0,
-      translations: [],
-    })
+    pushCaption(t)
     captionDraft.value = ''
     snack.value = { show: true, text: 'Caption u dergua', color: 'success' }
   } else {
@@ -225,42 +245,73 @@ onMounted(async () => {
   }
   connectWs()
 })
+
 onUnmounted(() => {
   clearInterval(tickInterval)
   stopFakeLevel()
-  stopStt()
+  stopSimStt()
+  browserStt.stop()
   disconnectWs()
   sessionStore.setActiveSession(null)
   endDrag()
 })
+
 watch(
   () => session.value?.status,
   (s) => {
     if (s === 'ENDED' || s === 'EXPIRED' || s === 'FAILED') {
       stopFakeLevel()
-      stopStt()
+      stopSimStt()
+      browserStt.stop()
     }
   }
 )
+
 async function startMic() {
   micLoading.value = true
+  sttError.value = null
   sessionStore.setMicActive(true)
   startFakeLevel()
-  startStt()
+
+  const langMap = { IT: 'it-IT', EN: 'en-US', SQ: 'sq-AL' }
+  const sttLang = langMap[session.value?.sourceLanguage] || 'it-IT'
+
+  const ok = browserStt.start({
+    lang: sttLang,
+    onResult: ({ text, isFinal }) => {
+      if (!text || !isFinal) return
+      pushCaption(text)
+    },
+    onError: (err) => {
+      console.warn('STT error', err)
+      sttError.value = String(err)
+      // fallback simulim nese browser STT deshton
+      startSimStt()
+    },
+  })
+
+  if (!ok) {
+    sttError.value = 'Speech recognition not supported - using Chrome recommended'
+    startSimStt()
+  }
+
   if (session.value && !['ACTIVE', 'ENDED', 'EXPIRED', 'FAILED'].includes(session.value.status)) {
     await changeState('ACTIVE')
   }
   micLoading.value = false
 }
+
 function stopMic() {
   stopFakeLevel()
-  stopStt()
+  stopSimStt()
+  browserStt.stop()
   sessionStore.setMicActive(false)
   sessionStore.setAudioLevel(0)
   if (session.value && !['ENDED', 'EXPIRED', 'FAILED'].includes(session.value.status)) {
     changeState('ENDED')
   }
 }
+
 async function changeState(newState) {
   actionLoading.value = true
   try {
@@ -269,18 +320,21 @@ async function changeState(newState) {
     actionLoading.value = false
   }
 }
+
 async function handleStart() {
   await changeState('ACTIVE')
 }
 async function handlePause() {
   await changeState('PAUSED')
+  browserStt.stop()
 }
 async function handleResume() {
   await changeState('ACTIVE')
 }
 async function handleEnd() {
   stopFakeLevel()
-  stopStt()
+  stopSimStt()
+  browserStt.stop()
   await changeState('ENDED')
 }
 </script>
