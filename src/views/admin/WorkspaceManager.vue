@@ -69,7 +69,7 @@
                       <p class="text-body-2 font-weight-bold mb-0 text-truncate">{{ cls.name }}</p>
                       <p class="text-caption text-medium-emphasis text-truncate">{{ cls.description }}</p>
                     </div>
-                    <v-btn icon="mdi-delete-outline" variant="text" size="small" color="error" @click="confirmDeleteClass(cls)" />
+                    <v-btn icon="mdi-delete-outline" variant="text" size="small" color="error" @click="confirmDeleteClass(cls)" aria-label="Fshi klasën" />
                   </div>
 
                   <v-divider class="mb-3" />
@@ -103,7 +103,7 @@
         <v-card-title class="pt-6 px-6 d-flex align-center gap-2">
           <v-avatar color="primary" size="32" rounded="lg"><v-icon color="white" size="18">mdi-plus</v-icon></v-avatar>
           New Workspace
-          <v-spacer /><v-btn icon="mdi-close" variant="text" @click="showCreateWs = false" />
+          <v-spacer /><v-btn icon="mdi-close" variant="text" @click="showCreateWs = false" aria-label="Mbyll" />
         </v-card-title>
         <v-card-text class="px-6">
           <v-text-field v-model="wsForm.name" label="Workspace Name" placeholder="e.g. UNIZKM" prepend-inner-icon="mdi-domain" class="mb-3" />
@@ -123,7 +123,7 @@
         <v-card-title class="pt-6 px-6 d-flex align-center gap-2">
           <v-avatar color="teal" size="32" rounded="lg"><v-icon color="white" size="18">mdi-plus</v-icon></v-avatar>
           New Class — {{ selectedWs?.name }}
-          <v-spacer /><v-btn icon="mdi-close" variant="text" @click="showCreateClass = false" />
+          <v-spacer /><v-btn icon="mdi-close" variant="text" @click="showCreateClass = false" aria-label="Mbyll" />
         </v-card-title>
         <v-card-text class="px-6">
           <v-text-field v-model="classForm.name" label="Class Name" placeholder="e.g. Klasa 001" prepend-inner-icon="mdi-google-classroom" class="mb-3" />

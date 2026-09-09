@@ -1,12 +1,12 @@
 <template>
-  <v-app :theme="uiStore.darkMode ? 'dark' : 'light'">
+  <v-app :theme="uiStore.darkMode ? 'dark' : 'light'" :class="{ 'zana-high-contrast': uiStore.highContrastMode }">
 
     <!-- Faqet fullscreen (ActiveSession, LiveCaptions) nuk kanë sidebar -->
     <template v-if="!isFullscreen">
 
       <!-- MOBILE TOP BAR -->
       <v-app-bar color="primary" elevation="2" height="58" class="d-lg-none">
-        <v-app-bar-nav-icon color="white" @click="mobileDrawer = !mobileDrawer" />
+        <v-app-bar-nav-icon color="white" @click="mobileDrawer = !mobileDrawer" aria-label="Hap menunë" />
         <v-app-bar-title>
           <div class="d-flex align-center gap-2">
             <v-avatar size="28" rounded="lg" style="background:rgba(255,255,255,0.15)">
@@ -17,7 +17,11 @@
         </v-app-bar-title>
         <template #append>
           <v-btn :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-            variant="text" color="white" size="small" @click="uiStore.toggleDarkMode()" />
+            variant="text" color="white" size="small" @click="uiStore.toggleDarkMode()"
+            :aria-label="uiStore.darkMode ? 'Kalo në temë të çelët' : 'Kalo në temë të errët'" />
+          <v-btn icon="mdi-contrast-circle" variant="text" color="white" size="small"
+            @click="uiStore.toggleHighContrast()"
+            :aria-label="uiStore.highContrastMode ? 'Çaktivizo kontrastin e lartë' : 'Aktivizo kontrastin e lartë'" />
         </template>
       </v-app-bar>
 
@@ -40,7 +44,11 @@
           </div>
           <v-spacer />
           <v-btn :icon="uiStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-            variant="text" size="x-small" @click="uiStore.toggleDarkMode()" />
+            variant="text" size="x-small" @click="uiStore.toggleDarkMode()"
+            :aria-label="uiStore.darkMode ? 'Kalo në temë të çelët' : 'Kalo në temë të errët'" />
+          <v-btn icon="mdi-contrast-circle" variant="text" size="x-small"
+            @click="uiStore.toggleHighContrast()"
+            :aria-label="uiStore.highContrastMode ? 'Çaktivizo kontrastin e lartë' : 'Aktivizo kontrastin e lartë'" />
         </div>
 
         <v-divider />
@@ -140,3 +148,33 @@ const adminNav = [
   { to: '/admin/providers', icon: 'mdi-server-network', label: 'Providers' },
 ]
 </script>
+
+<style>
+/* High-contrast mode: stronger borders, forced pure black/white text,
+   removed subtle opacity/emphasis so low-vision users get maximum
+   legibility. Toggled via the Accessibility control (ui store). */
+.zana-high-contrast,
+.zana-high-contrast .v-application {
+  filter: contrast(1.35) saturate(1.1);
+}
+.zana-high-contrast .v-card,
+.zana-high-contrast .v-sheet,
+.zana-high-contrast .v-btn,
+.zana-high-contrast .v-navigation-drawer,
+.zana-high-contrast .v-app-bar {
+  border-width: 2px !important;
+  border-color: currentColor !important;
+}
+.zana-high-contrast .text-medium-emphasis,
+.zana-high-contrast .text-disabled,
+.zana-high-contrast .text-caption {
+  opacity: 1 !important;
+  font-weight: 600 !important;
+}
+.zana-high-contrast .v-btn:focus-visible,
+.zana-high-contrast a:focus-visible,
+.zana-high-contrast button:focus-visible {
+  outline: 3px solid #ffbf00 !important;
+  outline-offset: 2px !important;
+}
+</style>

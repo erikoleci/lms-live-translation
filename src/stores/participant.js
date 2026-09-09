@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+function uid() {
+  return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+/** Pure client-side participant list -- no backend, purely for UI state. */
 export const useParticipantStore = defineStore('participant', () => {
   const participants = ref([])
   const currentParticipant = ref(null)
@@ -10,19 +15,19 @@ export const useParticipantStore = defineStore('participant', () => {
   }
 
   function joinSession(sessionId, name, language) {
-    const p = {
-      id: `p-${Date.now()}`,
+    const normalized = {
+      id: uid(),
       sessionId,
-      anonymousName: name || `Guest-${Math.floor(Math.random() * 9999)}`,
+      anonymousName: name || 'Anonymous',
       targetLanguage: language,
       audioEnabled: false,
       voiceCode: `${language.toLowerCase()}-female-1`,
       joinedAt: new Date().toISOString(),
       connectionStatus: 'CONNECTED',
     }
-    participants.value.push(p)
-    currentParticipant.value = p
-    return p
+    participants.value.push(normalized)
+    currentParticipant.value = normalized
+    return normalized
   }
 
   function updatePreferences(participantId, prefs) {
@@ -31,11 +36,14 @@ export const useParticipantStore = defineStore('participant', () => {
     if (currentParticipant.value?.id === participantId) Object.assign(currentParticipant.value, prefs)
   }
 
-  function leaveSession(participantId) {
+  function leaveSession(sessionId, participantId) {
     const p = participants.value.find(x => x.id === participantId)
     if (p) p.leftAt = new Date().toISOString()
     if (currentParticipant.value?.id === participantId) currentParticipant.value = null
   }
 
-  return { participants, currentParticipant, getParticipantsForSession, joinSession, updatePreferences, leaveSession }
+  return {
+    participants, currentParticipant,
+    getParticipantsForSession, joinSession, updatePreferences, leaveSession,
+  }
 })

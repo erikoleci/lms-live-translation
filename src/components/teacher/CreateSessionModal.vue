@@ -13,7 +13,7 @@
             <div class="text-caption text-white opacity-80">Plotëso të dhënat e sesionit</div>
           </div>
           <v-spacer />
-          <v-btn icon="mdi-close" variant="text" color="white" @click="model = false" />
+          <v-btn icon="mdi-close" variant="text" color="white" @click="model = false" aria-label="Mbyll" />
         </div>
       </v-sheet>
 
@@ -197,11 +197,16 @@ async function submit() {
   const { valid } = await formRef.value.validate()
   if (!valid) return
   saving.value = true
-  await new Promise(r => setTimeout(r, 600))
-  const session = sessionStore.createSession(form.value)
-  saving.value = false
-  model.value = false
-  resetForm()
-  emit('created', session.id)
+  try {
+    const session = await sessionStore.createSession(form.value)
+    model.value = false
+    resetForm()
+    emit('created', session.id)
+  } catch (e) {
+    // TODO: surface e via a snackbar in the parent dashboard once one exists here.
+    console.error('Failed to create session', e)
+  } finally {
+    saving.value = false
+  }
 }
 </script>

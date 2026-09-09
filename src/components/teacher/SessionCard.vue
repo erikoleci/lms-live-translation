@@ -60,7 +60,7 @@
         :to="`/teacher/session/${session.id}`">Fillo Sesionin</v-btn>
 
       <v-spacer />
-      <v-btn size="small" variant="text" icon="mdi-dots-vertical" />
+      <v-btn size="small" variant="text" icon="mdi-dots-vertical" aria-label="Më shumë veprime" />
     </v-card-actions>
   </v-card>
 </template>

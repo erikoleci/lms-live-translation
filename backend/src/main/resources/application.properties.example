@@ -1,0 +1,45 @@
+# Quarkus Live Translation Backend - Example Configuration
+quarkus.application.name=live-translation-tili
+quarkus.http.port=8080
+
+# Database (PostgreSQL)
+quarkus.datasource.db-kind=postgresql
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/tili_live
+quarkus.datasource.username=tili
+quarkus.datasource.password=change-me
+quarkus.hibernate-orm.database.generation=update   # dev only; use Flyway in prod
+quarkus.hibernate-orm.log.sql=true
+
+# WebSocket (websockets-next)
+quarkus.websockets-next.max-frame-size=65536
+
+# OIDC / Keycloak for LMS SSO (teacher auth)
+quarkus.oidc.enabled=true
+quarkus.oidc.auth-server-url=https://keycloak.tili.local/realms/tili
+quarkus.oidc.client-id=live-translation-backend
+quarkus.oidc.credentials.secret=...
+quarkus.oidc.application-type=service   # or web-app for some flows
+
+# Redis for pub/sub, ephemeral state, session coordination (recommended for prod)
+quarkus.redis.hosts=redis://localhost:6379
+
+# OpenAPI
+quarkus.smallrye-openapi.path=/q/openapi
+
+# AI Provider config (example - use secrets in prod, or Vault)
+ai.stt.provider=OPENAI_REALTIME
+ai.stt.api-key=${OPENAI_API_KEY}
+ai.translation.provider=OPENAI
+ai.tts.provider=OPENAI
+
+# Or Azure
+# ai.stt.provider=AZURE_SPEECH
+# ai.stt.endpoint=...
+# ai.stt.key=...
+
+# Cost & privacy
+session.max-duration-minutes=120
+transcript.retention-days=90
+recording.enabled-by-default=false
+
+# For local dev without real AI keys, use mock providers
