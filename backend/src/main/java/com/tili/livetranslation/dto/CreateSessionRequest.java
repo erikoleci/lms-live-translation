@@ -1,11 +1,17 @@
 package com.tili.livetranslation.dto;
 
+import com.tili.livetranslation.domain.enums.AccessMode;
 import com.tili.livetranslation.domain.enums.Language;
 
-public class JoinSessionRequest {
-    public String joinCode;
-    public String anonymousName;
-    public Language targetLanguage = Language.EN;
-    public boolean audioEnabled = false;
-    public String voiceCode;
+import java.util.List;
+
+public class CreateSessionRequest {
+    public String title;
+    public String courseId;
+    public AccessMode accessMode;
+    public Language sourceLanguage;
+    public List<Language> targetLanguages;
+    public boolean recordingEnabled = false;
+    public boolean studentTranscriptDownloadEnabled = false;
+    public Integer maxParticipants;
 }
